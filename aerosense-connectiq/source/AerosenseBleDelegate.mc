@@ -164,6 +164,9 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     public function onDescriptorWrite(descriptor as BluetoothLowEnergy.Descriptor,
                                       status as BluetoothLowEnergy.Status) as Void {
         // Push pending settings right after CCCD enables, since we now know GATT is ready.
+        if (status != BluetoothLowEnergy.STATUS_SUCCESS) {
+            return;
+        }
         if (BluetoothLowEnergy.cccdUuid().equals(descriptor.getUuid()) && _pendingMassKg != null) {
             writeMassKg(_pendingMassKg);
         }

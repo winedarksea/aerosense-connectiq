@@ -17,7 +17,26 @@ import Toybox.System;
 //    12     2  airspeed_cms      u16, cm/s
 //    14     2  battery_mv        u16, mV
 //
-// v2 (prefixed with version=0x02):
+// v2a (current firmware, 24 bytes, no version prefix):
+//   off  size  field
+//     0     1  mode
+//     1     1  battery_pct
+//     2     1  cda_status
+//     3     1  flags
+//     4     2  power_w
+//     6     2  speed_cms
+//     8     2  yaw_deci_deg
+//    10     2  cda_milli
+//    12     2  airspeed_cms
+//    14     2  battery_mv
+//    16     1  humidity_pct
+//    17     1  motion
+//    18     1  surface
+//    19     1  speed_source
+//    20     2  grade_centi_pct
+//    22     2  reserved
+//
+// v2b (prefixed with version=0x02):
 //   off  size  field
 //     0     1  version (0x02)
 //     1    16  v1 layout above
@@ -29,7 +48,8 @@ import Toybox.System;
 //    23     2  reserved
 class TelemetryModel {
     private const V1_LEN = 16;
-    private const V2_LEN = 25;
+    private const V2_UNPREFIXED_LEN = 24;
+    private const V2_PREFIXED_LEN = 25;
 
     public var version as Number = 0;
     public var mode as Number = 0;
@@ -58,10 +78,16 @@ class TelemetryModel {
     public function parse(data as ByteArray) as Boolean {
         var len = data.size();
         var base = 0;
+        var hasExtended = false;
 
-        if (len >= V2_LEN && data[0] == 0x02) {
+        if (len >= V2_PREFIXED_LEN && data[0] == 0x02) {
             version = 2;
             base = 1;
+            hasExtended = true;
+        } else if (len >= V2_UNPREFIXED_LEN) {
+            version = 2;
+            base = 0;
+            hasExtended = true;
         } else if (len >= V1_LEN) {
             version = 1;
             base = 0;
@@ -86,7 +112,7 @@ class TelemetryModel {
         var battMv = data.decodeNumber(Lang.NUMBER_FORMAT_UINT16, {:offset => base + 14, :endianness => Lang.ENDIAN_LITTLE});
         batteryV = battMv / 1000.0;
 
-        if (version >= 2) {
+        if (hasExtended) {
             humidityPct = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 16});
             motion      = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 17});
             surface     = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 18});

@@ -49,8 +49,12 @@ class AerosenseField extends WatchUi.DataField {
         if (s == null || s <= 0.5) { return; }
 
         var now = System.getTimer();
-        if (_lastSpeedWriteMs != 0 && (now - _lastSpeedWriteMs) < SPEED_WRITE_MIN_INTERVAL_MS) {
-            return;
+        if (_lastSpeedWriteMs != 0) {
+            var dt = now - _lastSpeedWriteMs;
+            // getTimer() wraps; only apply throttle for non-negative deltas.
+            if (dt >= 0 && dt < SPEED_WRITE_MIN_INTERVAL_MS) {
+                return;
+            }
         }
         if (_model.hasExternalSpeed()) {
             return;
