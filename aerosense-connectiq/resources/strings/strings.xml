@@ -3,6 +3,7 @@
 
     <string id="ConfigTitle">Aerosense</string>
     <string id="MassKg">Total Mass (kg)</string>
+    <string id="WheelCircMm">Wheel Circumference (mm)</string>
     <string id="Searching">Searching…</string>
     <string id="NoDevice">No Aerosense</string>
 

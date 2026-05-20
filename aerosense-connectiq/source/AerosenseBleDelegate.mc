@@ -19,6 +19,8 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     private var _connectionListener as WeakReference?;
     private var _scanning as Boolean = false;
     private var _pendingMassKg as Number?;
+    private var _pendingWheelCircMm as Number?;
+    private var _settingsWriteInFlight as Number?;
 
     public function initialize(profileManager as ProfileManager, model as TelemetryModel) {
         BleDelegate.initialize();
@@ -129,6 +131,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         _telemetryChar = null;
         _speedChar = null;
         _settingsChar = null;
+        _settingsWriteInFlight = null;
     }
 
     private function _notifyConnected(device as BluetoothLowEnergy.Device) as Void {
@@ -153,22 +156,32 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
 
     public function onCharacteristicWrite(char as BluetoothLowEnergy.Characteristic,
                                           status as BluetoothLowEnergy.Status) as Void {
-        if (char.getUuid().equals(_profileManager.SETTINGS_CHARACTERISTIC)) {
-            // Settings ack — once the device has the mass, clear the pending value.
-            if (status == BluetoothLowEnergy.STATUS_SUCCESS) {
-                _pendingMassKg = null;
-            }
+        if (!char.getUuid().equals(_profileManager.SETTINGS_CHARACTERISTIC) || _settingsWriteInFlight == null) {
+            return;
         }
+
+        if (status != BluetoothLowEnergy.STATUS_SUCCESS) {
+            _settingsWriteInFlight = null;
+            return;
+        }
+
+        if (_settingsWriteInFlight == Constants.SETTINGS_TYPE_MASS_KG_X10) {
+            _pendingMassKg = null;
+        } else if (_settingsWriteInFlight == Constants.SETTINGS_TYPE_WHEEL_CIRC_MM) {
+            _pendingWheelCircMm = null;
+        }
+
+        _settingsWriteInFlight = null;
+        _flushPendingSettings();
     }
 
     public function onDescriptorWrite(descriptor as BluetoothLowEnergy.Descriptor,
                                       status as BluetoothLowEnergy.Status) as Void {
-        // Push pending settings right after CCCD enables, since we now know GATT is ready.
         if (status != BluetoothLowEnergy.STATUS_SUCCESS) {
             return;
         }
-        if (BluetoothLowEnergy.cccdUuid().equals(descriptor.getUuid()) && _pendingMassKg != null) {
-            writeMassKg(_pendingMassKg);
+        if (BluetoothLowEnergy.cccdUuid().equals(descriptor.getUuid())) {
+            _flushPendingSettings();
         }
     }
 
@@ -220,21 +233,62 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         if (kg <= 0) {
             return false;
         }
-        if (_settingsChar == null) {
-            // Queue for after connect/CCCD.
-            _pendingMassKg = kg;
+        _pendingMassKg = kg;
+        _flushPendingSettings();
+        return true;
+    }
+
+    //! Write wheel circumference in millimeters to the Settings characteristic
+    //! as TLV { type=0x02, len=2, value=uint16 LE }.
+    public function writeWheelCircMm(mm as Number) as Boolean {
+        if (mm <= 0) {
             return false;
         }
+        _pendingWheelCircMm = mm;
+        _flushPendingSettings();
+        return true;
+    }
+
+    private function _flushPendingSettings() as Void {
+        if (_settingsChar == null || _settingsWriteInFlight != null) {
+            return;
+        }
+
+        if (_pendingMassKg != null) {
+            _settingsWriteInFlight = Constants.SETTINGS_TYPE_MASS_KG_X10;
+            _settingsChar.requestWrite(_buildMassTlv(_pendingMassKg),
+                {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
+            return;
+        }
+
+        if (_pendingWheelCircMm != null) {
+            _settingsWriteInFlight = Constants.SETTINGS_TYPE_WHEEL_CIRC_MM;
+            _settingsChar.requestWrite(_buildWheelCircTlv(_pendingWheelCircMm),
+                {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
+        }
+    }
+
+    private function _buildMassTlv(kg as Number) as ByteArray {
         var kgX10 = (kg * 10).toNumber();
-        if (kgX10 < 0) { kgX10 = 0; }
-        if (kgX10 > 65535) { kgX10 = 65535; }
+        if (kgX10 < 200) { kgX10 = 200; }
+        if (kgX10 > 2500) { kgX10 = 2500; }
         var tlv = new[4]b;
         tlv[0] = Constants.SETTINGS_TYPE_MASS_KG_X10;
         tlv[1] = 0x02;
         tlv.encodeNumber(kgX10, Lang.NUMBER_FORMAT_UINT16,
             {:offset => 2, :endianness => Lang.ENDIAN_LITTLE});
-        _settingsChar.requestWrite(tlv,
-            {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
-        return true;
+        return tlv;
+    }
+
+    private function _buildWheelCircTlv(mm as Number) as ByteArray {
+        var circMm = mm.toNumber();
+        if (circMm < 1000) { circMm = 1000; }
+        if (circMm > 3000) { circMm = 3000; }
+        var tlv = new[4]b;
+        tlv[0] = Constants.SETTINGS_TYPE_WHEEL_CIRC_MM;
+        tlv[1] = 0x02;
+        tlv.encodeNumber(circMm, Lang.NUMBER_FORMAT_UINT16,
+            {:offset => 2, :endianness => Lang.ENDIAN_LITTLE});
+        return tlv;
     }
 }

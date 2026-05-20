@@ -19,6 +19,18 @@ class SensorConfigurationDelegate extends WatchUi.Menu2InputDelegate {
                 new MassPicker(current),
                 new MassPickerDelegate(_view),
                 WatchUi.SLIDE_LEFT);
+            return;
+        }
+
+        if (SensorConfigurationView.ITEM_WHEEL_CIRC.equals(item.getId())) {
+            var storedWheelCirc = Storage.getValue(Constants.Keys.WHEEL_CIRC_MM);
+            var currentWheelCirc = (storedWheelCirc == null)
+                ? Constants.DEFAULT_WHEEL_CIRC_MM
+                : (storedWheelCirc as Number);
+            WatchUi.pushView(
+                new WheelCircPicker(currentWheelCirc),
+                new WheelCircPickerDelegate(_view),
+                WatchUi.SLIDE_LEFT);
         }
     }
 
@@ -30,7 +42,7 @@ class SensorConfigurationDelegate extends WatchUi.Menu2InputDelegate {
 //! Whole-number kg picker, 20..200 kg.
 class MassPicker extends WatchUi.Picker {
     public function initialize(currentKg as Number) {
-        var factory = new MassNumberFactory(20, 200, 1);
+        var factory = new RangeNumberFactory(20, 200, 1);
         Picker.initialize({
             :title => new WatchUi.Text({
                 :text => WatchUi.loadResource(Rez.Strings.MassKg) as String,
@@ -44,8 +56,24 @@ class MassPicker extends WatchUi.Picker {
     }
 }
 
+class WheelCircPicker extends WatchUi.Picker {
+    public function initialize(currentMm as Number) {
+        var factory = new RangeNumberFactory(1000, 3000, 10);
+        Picker.initialize({
+            :title => new WatchUi.Text({
+                :text => WatchUi.loadResource(Rez.Strings.WheelCircMm) as String,
+                :locX => WatchUi.LAYOUT_HALIGN_CENTER,
+                :locY => WatchUi.LAYOUT_VALIGN_BOTTOM,
+                :color => Graphics.COLOR_WHITE
+            }),
+            :pattern => [factory],
+            :defaults => [factory.getIndex(currentMm)]
+        });
+    }
+}
+
 //! Inline number factory — the SDK ships NumberFactory only as a sample.
-class MassNumberFactory extends WatchUi.PickerFactory {
+class RangeNumberFactory extends WatchUi.PickerFactory {
     private var _start as Number;
     private var _stop as Number;
     private var _increment as Number;
@@ -102,6 +130,34 @@ class MassPickerDelegate extends WatchUi.PickerDelegate {
             var ble = getApp().getBleDelegate();
             if (ble != null) {
                 ble.writeMassKg(kg);
+            }
+        }
+        WatchUi.popView(WatchUi.SLIDE_RIGHT);
+        return true;
+    }
+
+    public function onCancel() as Boolean {
+        WatchUi.popView(WatchUi.SLIDE_RIGHT);
+        return true;
+    }
+}
+
+class WheelCircPickerDelegate extends WatchUi.PickerDelegate {
+    private var _view as SensorConfigurationView;
+
+    public function initialize(view as SensorConfigurationView) {
+        PickerDelegate.initialize();
+        _view = view;
+    }
+
+    public function onAccept(values as Array) as Boolean {
+        var mm = values[0] as Number;
+        if (mm != null && mm > 0) {
+            Storage.setValue(Constants.Keys.WHEEL_CIRC_MM, mm);
+            _view.setWheelCircMm(mm);
+            var ble = getApp().getBleDelegate();
+            if (ble != null) {
+                ble.writeWheelCircMm(mm);
             }
         }
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
