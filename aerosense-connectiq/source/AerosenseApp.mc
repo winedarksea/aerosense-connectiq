@@ -9,6 +9,7 @@ class AerosenseApp extends Application.AppBase {
     private var _profileManager as ProfileManager?;
     private var _bleDelegate as AerosenseBleDelegate?;
     private var _model as TelemetryModel?;
+    private var _field as WeakReference?;
 
     public function initialize() {
         AppBase.initialize();
@@ -50,7 +51,20 @@ class AerosenseApp extends Application.AppBase {
     }
 
     public function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
-        return [new AerosenseField(_model)];
+        var field = new AerosenseField(_model);
+        _field = field.weak();
+        return [field];
+    }
+
+    //! Forward settings sync to the data field so it can refresh the
+    //! tap-to-coast toggle without waiting for the next tick.
+    public function onSettingsChanged() as Void {
+        if (_field != null && _field.stillAlive()) {
+            var f = _field.get();
+            if (f != null && (f has :onSettingsChanged)) {
+                f.onSettingsChanged();
+            }
+        }
     }
 
     //! Connect IQ 5.1 wireless-pairing hook — invoked when the user adds this

@@ -188,6 +188,32 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         return true;
     }
 
+    //! Request a coast-down capture. Firmware enforces preconditions (no pedal
+    //! power, decelerating, no capture in flight) — this is a request, not a
+    //! command.
+    public function writeCoastDownTrigger() as Boolean {
+        return _writeRequestTlv(Constants.SETTINGS_TYPE_COAST_DOWN_REQUEST);
+    }
+
+    //! Request a static pressure calibration. Firmware enforces stationary +
+    //! settled-pressure preconditions.
+    public function writePressureCalTrigger() as Boolean {
+        return _writeRequestTlv(Constants.SETTINGS_TYPE_PRESSURE_CAL_REQUEST);
+    }
+
+    private function _writeRequestTlv(typeByte as Number) as Boolean {
+        if (_settingsChar == null) {
+            return false;
+        }
+        var tlv = new[3]b;
+        tlv[0] = typeByte;
+        tlv[1] = 0x01;
+        tlv[2] = 0x01;
+        _settingsChar.requestWrite(tlv,
+            {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
+        return true;
+    }
+
     //! Write the rider+bike+gear mass to the Settings characteristic as TLV
     //! { type=0x01, len=2, value=uint16 LE kg*10 }.
     public function writeMassKg(kg as Number) as Boolean {

@@ -1,3 +1,4 @@
+import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.System;
 
@@ -173,5 +174,49 @@ class TelemetryModel {
             case 3: return "ROCKY";
         }
         return "—";
+    }
+
+    public function motionCode() as String {
+        switch (motion) {
+            case 0: return "STL";
+            case 1: return "BRK";
+            case 2: return "CST";
+            case 3: return "PDL";
+            case 4: return "STD";
+            case 5: return "RUN";
+        }
+        return "—";
+    }
+
+    public function motionColor() as Number {
+        switch (motion) {
+            case 0: return Graphics.COLOR_DK_GRAY;
+            case 1: return Graphics.COLOR_RED;
+            case 2: return Graphics.COLOR_BLUE;
+            case 3: return Graphics.COLOR_GREEN;
+            case 4: return Graphics.COLOR_ORANGE;
+            case 5: return Graphics.COLOR_PURPLE;
+        }
+        return Graphics.COLOR_DK_GRAY;
+    }
+
+    public function surfaceCode() as String {
+        switch (surface) {
+            case 0: return "SMO";
+            case 1: return "RGH";
+            case 2: return "GVL";
+            case 3: return "RKY";
+        }
+        return "—";
+    }
+
+    public function surfaceColor() as Number {
+        switch (surface) {
+            case 0: return Graphics.COLOR_WHITE;
+            case 1: return Graphics.COLOR_YELLOW;
+            case 2: return Graphics.COLOR_ORANGE;
+            case 3: return Graphics.COLOR_RED;
+        }
+        return Graphics.COLOR_DK_GRAY;
     }
 }
