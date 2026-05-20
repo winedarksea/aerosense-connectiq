@@ -1,0 +1,15 @@
+<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <string id="AppName">Aerosense</string>
+
+    <string id="ConfigTitle">Aerosense</string>
+    <string id="MassKg">Total Mass (kg)</string>
+    <string id="Searching">Searching…</string>
+    <string id="NoDevice">No Aerosense</string>
+
+    <string id="label_cda">CDA</string>
+    <string id="label_wind">WIND M/S</string>
+    <string id="label_yaw">YAW</string>
+    <string id="label_grade">GRADE %</string>
+    <string id="label_humidity">HUM %</string>
+    <string id="label_state">STATE</string>
+</strings>

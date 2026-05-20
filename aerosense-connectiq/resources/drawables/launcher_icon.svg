@@ -1,0 +1,21 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <!-- rounded dark-navy badge -->
+    <rect width="64" height="64" rx="12" ry="12" fill="#0F1B2D"/>
+    <!-- subtle inner highlight -->
+    <rect x="2" y="2" width="60" height="60" rx="10" ry="10" fill="none" stroke="#1F3047" stroke-width="1"/>
+
+    <!-- asymmetric airfoil cross-section, leading edge left, sharp trailing edge right -->
+    <path d="M12 32
+             C 12 20, 28 14, 42 22
+             L 58 31
+             L 58 33
+             L 42 40
+             C 28 44, 12 42, 12 32 Z"
+          fill="#FFD23F"/>
+
+    <!-- two parallel inflow streamlines that split and stay attached to the airfoil surface -->
+    <path d="M3 28 C 11 28, 12 25, 14 21 C 19 14, 30 12, 40 16 C 49 20, 55 27, 61 30"
+          fill="none" stroke="#4FC3F7" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M3 36 C 11 36, 12 39, 14 42 C 18 47, 30 48, 40 45 C 49 42, 55 36, 61 34"
+          fill="none" stroke="#4FC3F7" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
