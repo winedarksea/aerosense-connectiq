@@ -53,7 +53,7 @@ class AerosenseApp extends Application.AppBase {
     public function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
         var field = new AerosenseField(_model);
         _field = field.weak();
-        return [field];
+        return [field, new AerosenseFieldDelegate(field)];
     }
 
     //! Forward settings sync to the data field so it can refresh the

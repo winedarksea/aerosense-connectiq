@@ -22,15 +22,14 @@ class SensorConfigurationDelegate extends WatchUi.Menu2InputDelegate {
             return;
         }
 
-        if (SensorConfigurationView.ITEM_WHEEL_CIRC.equals(item.getId())) {
-            var storedWheelCirc = Storage.getValue(Constants.Keys.WHEEL_CIRC_MM);
-            var currentWheelCirc = (storedWheelCirc == null)
-                ? Constants.DEFAULT_WHEEL_CIRC_MM
-                : (storedWheelCirc as Number);
-            WatchUi.pushView(
-                new WheelCircPicker(currentWheelCirc),
-                new WheelCircPickerDelegate(_view),
-                WatchUi.SLIDE_LEFT);
+        if (SensorConfigurationView.ITEM_PRESSURE_CAL.equals(item.getId())) {
+            var ble = getApp().getBleDelegate();
+            var queued = (ble != null) && ble.queuePressureCalRequest();
+            _view.setPressureCalResult(queued);
+            WatchUi.showToast(queued
+                ? WatchUi.loadResource(Rez.Strings.RequestQueued) as String
+                : WatchUi.loadResource(Rez.Strings.RequestNoLink) as String,
+                {});
         }
     }
 
@@ -52,22 +51,6 @@ class MassPicker extends WatchUi.Picker {
             }),
             :pattern => [factory],
             :defaults => [factory.getIndex(currentKg)]
-        });
-    }
-}
-
-class WheelCircPicker extends WatchUi.Picker {
-    public function initialize(currentMm as Number) {
-        var factory = new RangeNumberFactory(1000, 3000, 10);
-        Picker.initialize({
-            :title => new WatchUi.Text({
-                :text => WatchUi.loadResource(Rez.Strings.WheelCircMm) as String,
-                :locX => WatchUi.LAYOUT_HALIGN_CENTER,
-                :locY => WatchUi.LAYOUT_VALIGN_BOTTOM,
-                :color => Graphics.COLOR_WHITE
-            }),
-            :pattern => [factory],
-            :defaults => [factory.getIndex(currentMm)]
         });
     }
 }
@@ -129,35 +112,7 @@ class MassPickerDelegate extends WatchUi.PickerDelegate {
             _view.setMass(kg);
             var ble = getApp().getBleDelegate();
             if (ble != null) {
-                ble.writeMassKg(kg);
-            }
-        }
-        WatchUi.popView(WatchUi.SLIDE_RIGHT);
-        return true;
-    }
-
-    public function onCancel() as Boolean {
-        WatchUi.popView(WatchUi.SLIDE_RIGHT);
-        return true;
-    }
-}
-
-class WheelCircPickerDelegate extends WatchUi.PickerDelegate {
-    private var _view as SensorConfigurationView;
-
-    public function initialize(view as SensorConfigurationView) {
-        PickerDelegate.initialize();
-        _view = view;
-    }
-
-    public function onAccept(values as Array) as Boolean {
-        var mm = values[0] as Number;
-        if (mm != null && mm > 0) {
-            Storage.setValue(Constants.Keys.WHEEL_CIRC_MM, mm);
-            _view.setWheelCircMm(mm);
-            var ble = getApp().getBleDelegate();
-            if (ble != null) {
-                ble.writeWheelCircMm(mm);
+                ble.queueMassKg(kg);
             }
         }
         WatchUi.popView(WatchUi.SLIDE_RIGHT);

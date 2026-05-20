@@ -3,10 +3,10 @@ import Toybox.Lang;
 import Toybox.WatchUi;
 
 //! Configuration menu shown when the user adds the AerosenseField to a screen.
-//! Editable setup items for rider+bike+gear mass and wheel circumference.
+//! Editable setup items for rider+bike+gear mass plus service actions.
 class SensorConfigurationView extends WatchUi.Menu2 {
     public static const ITEM_MASS = "mass";
-    public static const ITEM_WHEEL_CIRC = "wheel_circ";
+    public static const ITEM_PRESSURE_CAL = "pressure_cal";
 
     public function initialize() {
         Menu2.initialize({:title => WatchUi.loadResource(Rez.Strings.ConfigTitle) as String});
@@ -18,15 +18,10 @@ class SensorConfigurationView extends WatchUi.Menu2 {
             ITEM_MASS,
             null
         ));
-
-        var storedWheelCirc = Storage.getValue(Constants.Keys.WHEEL_CIRC_MM);
-        var wheelCirc = (storedWheelCirc == null)
-            ? Constants.DEFAULT_WHEEL_CIRC_MM
-            : (storedWheelCirc as Number);
         addItem(new MenuItem(
-            WatchUi.loadResource(Rez.Strings.WheelCircMm) as String,
-            wheelCirc.toString() + " mm",
-            ITEM_WHEEL_CIRC,
+            WatchUi.loadResource(Rez.Strings.PressureCal) as String,
+            null,
+            ITEM_PRESSURE_CAL,
             null
         ));
     }
@@ -39,11 +34,14 @@ class SensorConfigurationView extends WatchUi.Menu2 {
         }
     }
 
-    public function setWheelCircMm(mm as Number) as Void {
-        var idx = findItemById(ITEM_WHEEL_CIRC);
+    public function setPressureCalResult(queued as Boolean) as Void {
+        var idx = findItemById(ITEM_PRESSURE_CAL);
         if (idx >= 0) {
             var item = getItem(idx) as MenuItem;
-            item.setSubLabel(mm.toString() + " mm");
+            var label = queued
+                ? WatchUi.loadResource(Rez.Strings.RequestQueued) as String
+                : WatchUi.loadResource(Rez.Strings.RequestNoLink) as String;
+            item.setSubLabel(label);
         }
     }
 }

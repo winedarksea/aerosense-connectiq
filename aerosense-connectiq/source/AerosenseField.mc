@@ -109,12 +109,12 @@ class AerosenseField extends WatchUi.DataField {
             // by definition stationary at this point, so latency is fine.
             return;
         }
-        if (ble.writePressureCalTrigger()) {
+        if (ble.queuePressureCalRequest()) {
             Application.Properties.setValue(Constants.PROP_TRIGGER_PRESSURE_CAL, false);
         }
     }
 
-    public function onTap(location as Graphics.Point2D) as Boolean {
+    public function handleTap() as Boolean {
         if (!_tapEnabled) {
             return false;
         }
@@ -134,7 +134,7 @@ class AerosenseField extends WatchUi.DataField {
 
     private function _fireCoastDown(now as Number) as Void {
         var ble = getApp().getBleDelegate();
-        var ok = (ble != null) && ble.isConnected() && ble.writeCoastDownTrigger();
+        var ok = (ble != null) && ble.isConnected() && ble.queueCoastDownRequest();
         _tapState = ok ? TAP_CONFIRMED : TAP_NO_LINK;
         _tapStateAtMs = now;
         WatchUi.requestUpdate();

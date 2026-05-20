@@ -28,7 +28,7 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     }
 
     public function pairingRequired() as Boolean {
-        return true;
+        return Storage.getValue(Constants.Keys.PAIRED_SENSOR) == null;
     }
 
     public function onScan() as Boolean {
@@ -113,11 +113,7 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         var ble = getApp().getBleDelegate();
         var mass = Storage.getValue(Constants.Keys.MASS_KG);
         if (ble != null && mass != null) {
-            ble.writeMassKg(mass as Number);
-        }
-        var wheelCirc = Storage.getValue(Constants.Keys.WHEEL_CIRC_MM);
-        if (ble != null && wheelCirc != null) {
-            ble.writeWheelCircMm(wheelCirc as Number);
+            ble.queueMassKg(mass as Number);
         }
     }
 
