@@ -7,7 +7,8 @@
     <string id="RequestQueued">Queued</string>
     <string id="RequestNoLink">No link</string>
     <string id="Searching">Searching…</string>
-    <string id="NoDevice">No Aerosense</string>
+    <string id="NoDevice">No Aerosense Connected</string>
+    <string id="NoDeviceHint">Pair from head-unit Sensors menu</string>
 
     <string id="label_cda">CDA</string>
     <string id="label_wind">WIND M/S</string>

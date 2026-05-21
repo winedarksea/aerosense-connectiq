@@ -51,5 +51,12 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# dist
+**/bin/*
+**/mir/*
+**/internal-mir/*
+**/gen/*
+
 # Local Garmin Connect IQ signing key
 developer_key
+*.DS_Store

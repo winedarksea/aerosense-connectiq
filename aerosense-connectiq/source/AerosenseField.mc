@@ -181,11 +181,14 @@ class AerosenseField extends WatchUi.DataField {
         var headerH = _drawHeader(dc, fg, dim, connected, fresh);
 
         if (!connected) {
-            _drawStatusMessage(dc, fg, headerH, WatchUi.loadResource(Rez.Strings.NoDevice) as String);
+            _drawStatusMessage(dc, fg, dim, headerH,
+                WatchUi.loadResource(Rez.Strings.NoDevice) as String,
+                WatchUi.loadResource(Rez.Strings.NoDeviceHint) as String);
             return;
         }
         if (!fresh) {
-            _drawStatusMessage(dc, fg, headerH, WatchUi.loadResource(Rez.Strings.Searching) as String);
+            _drawStatusMessage(dc, fg, dim, headerH,
+                WatchUi.loadResource(Rez.Strings.Searching) as String, null);
             return;
         }
 
@@ -286,13 +289,27 @@ class AerosenseField extends WatchUi.DataField {
         dc.drawText(x + w / 2, y, font, code, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
-    //! Centered single-line status message in the area below the header.
-    private function _drawStatusMessage(dc as Graphics.Dc, fg as Number,
-                                        headerH as Number, msg as String) as Void {
-        dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+    //! Centered status message in the area below the header. Optional hint
+    //! line is drawn beneath in a smaller dim font.
+    private function _drawStatusMessage(dc as Graphics.Dc, fg as Number, dim as Number,
+                                        headerH as Number, msg as String,
+                                        hint as String?) as Void {
         var font = _pickStatusFont(dc, msg);
-        var y = headerH + (_height - headerH) / 2 - Graphics.getFontHeight(font) / 2;
-        dc.drawText(_width / 2, y, font, msg, Graphics.TEXT_JUSTIFY_CENTER);
+        var fontH = Graphics.getFontHeight(font);
+        var hintFont = Graphics.FONT_XTINY;
+        var hintH = (hint != null) ? Graphics.getFontHeight(hintFont) : 0;
+        var hintGap = (hint != null) ? 4 : 0;
+        var blockH = fontH + hintGap + hintH;
+        var top = headerH + (_height - headerH) / 2 - blockH / 2;
+
+        dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(_width / 2, top, font, msg, Graphics.TEXT_JUSTIFY_CENTER);
+
+        if (hint != null) {
+            dc.setColor(dim, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(_width / 2, top + fontH + hintGap, hintFont, hint,
+                Graphics.TEXT_JUSTIFY_CENTER);
+        }
     }
 
     private function _pickStatusFont(dc as Graphics.Dc, msg as String) as Graphics.FontDefinition {
