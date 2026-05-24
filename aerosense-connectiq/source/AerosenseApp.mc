@@ -2,6 +2,7 @@ import Toybox.Application;
 import Toybox.Application.Storage;
 import Toybox.BluetoothLowEnergy;
 import Toybox.Lang;
+import Toybox.Sensor;
 import Toybox.WatchUi;
 
 class AerosenseApp extends Application.AppBase {
@@ -115,6 +116,13 @@ class AerosenseApp extends Application.AppBase {
         if (mass != null && _bleDelegate != null) {
             (_bleDelegate as AerosenseBleDelegate).queueMassKg(mass as Number);
         }
+    }
+
+    //! Native Connect IQ sensor-pairing entry point. This is separate from the
+    //! foreground data-field BLE delegate because Garmin may instantiate it in
+    //! the system pairing UI without running the data field view.
+    public function getSensorDelegate() as Sensor.SensorDelegate or Null {
+        return new AerosenseSensorDelegate();
     }
 }
 

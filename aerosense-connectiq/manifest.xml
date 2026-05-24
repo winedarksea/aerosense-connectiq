@@ -11,6 +11,7 @@
         </iq:products>
         <iq:permissions>
             <iq:uses-permission id="BluetoothLowEnergy"/>
+            <iq:uses-permission id="Sensor"/>
             <iq:uses-permission id="FitContributor"/>
         </iq:permissions>
         <iq:languages>
