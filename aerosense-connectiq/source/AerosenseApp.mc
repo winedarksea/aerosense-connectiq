@@ -124,6 +124,12 @@ class AerosenseApp extends Application.AppBase {
     public function getSensorDelegate() as Sensor.SensorDelegate or Null {
         return new AerosenseSensorDelegate();
     }
+
+    public function getSensorConfigurationView(sensor as Sensor.SensorInfo)
+            as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
+        var view = new SensorConfigurationView();
+        return [view, new SensorConfigurationDelegate(view)];
+    }
 }
 
 function getApp() as AerosenseApp {

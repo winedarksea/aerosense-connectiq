@@ -55,7 +55,7 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         }
 
         _reportedScanResult = result;
-        Sensor.notifyNewSensor(_toSensorInfo(result), false);
+        Sensor.notifyNewSensor(_toSensorInfo(result), true);
         Sensor.notifyScanComplete();
         _bleDelegate.stopScan();
         _bleDelegate.setScanListener(null);
