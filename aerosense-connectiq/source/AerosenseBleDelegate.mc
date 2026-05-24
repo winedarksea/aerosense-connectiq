@@ -20,6 +20,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     private var _scanListener as WeakReference?;
     private var _connectionListener as WeakReference?;
     private var _scanning as Boolean = false;
+    private var _scanFilterEnabled as Boolean = true;
     private var _settingsQueue as Array<ByteArray> = [];
     private var _settingsWriteInFlight as Boolean = false;
 
@@ -37,6 +38,10 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
 
     public function setConnectionListener(listener as Object) as Void {
         _connectionListener = listener.weak();
+    }
+
+    public function setScanFilterEnabled(enabled as Boolean) as Void {
+        _scanFilterEnabled = enabled;
     }
 
     public function startScan() as Void {
@@ -58,7 +63,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             if (!(result instanceof BluetoothLowEnergy.ScanResult)) {
                 continue;
             }
-            if (!_advertisesAerosense(result)) {
+            if (_scanFilterEnabled && !_advertisesAerosense(result)) {
                 continue;
             }
             if (_scanListener != null && _scanListener.stillAlive()) {

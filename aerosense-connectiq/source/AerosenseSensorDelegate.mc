@@ -2,11 +2,17 @@ import Toybox.Application.Storage;
 import Toybox.BluetoothLowEnergy;
 import Toybox.Lang;
 import Toybox.Sensor;
+import Toybox.System;
 
 //! Native Connect IQ sensor pairing for the Aerosense custom BLE peripheral.
 //! This delegate must be self-contained: in the system pairing UI, the data
 //! field's normal onStart()/view lifecycle may not have created its BLE objects.
 class AerosenseSensorDelegate extends Sensor.SensorDelegate {
+    private const UUID_AD_TYPE_INCOMPLETE_128 = 0x06;
+    private const UUID_AD_TYPE_COMPLETE_128 = 0x07;
+    private const NAME_AD_TYPE_SHORT = 0x08;
+    private const NAME_AD_TYPE_COMPLETE = 0x09;
+
     private var _profileManager as ProfileManager;
     private var _bleDelegate as AerosenseBleDelegate;
     private var _pendingSensor as Sensor.SensorInfo?;
@@ -16,21 +22,21 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         SensorDelegate.initialize();
         _profileManager = new ProfileManager();
         _bleDelegate = new AerosenseBleDelegate(_profileManager, new TelemetryModel());
+        _bleDelegate.setScanFilterEnabled(false);
         _bleDelegate.setScanListener(self);
         _bleDelegate.setConnectionListener(self);
         BluetoothLowEnergy.setDelegate(_bleDelegate);
         _profileManager.registerProfiles();
+        System.println("AerosenseSensorDelegate initialized");
     }
 
     public function pairingRequired() as Boolean {
-        return Storage.getValue(Constants.Keys.PAIRED_SENSOR) == null;
+        System.println("AerosenseSensorDelegate pairingRequired");
+        return true;
     }
 
     public function onScan() as Boolean {
-        if (Storage.getValue(Constants.Keys.PAIRED_SENSOR) != null) {
-            return false;
-        }
-
+        System.println("AerosenseSensorDelegate onScan");
         _reportedScanResult = null;
         _bleDelegate.setScanListener(self);
         _bleDelegate.startScan();
@@ -38,6 +44,12 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     }
 
     public function onScanResult(result as BluetoothLowEnergy.ScanResult) as Void {
+        var name = result.getDeviceName();
+        System.println("AerosenseSensorDelegate onScanResult " +
+            ((name == null) ? "<unnamed>" : name));
+        if (!_isAerosenseCandidate(result)) {
+            return;
+        }
         if (_reportedScanResult != null) {
             return;
         }
@@ -50,6 +62,7 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     }
 
     public function onPair(sensor as Sensor.SensorInfo) as Boolean {
+        System.println("AerosenseSensorDelegate onPair");
         var data = sensor.data;
         if (data == null) {
             return false;
@@ -65,6 +78,7 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     }
 
     public function procConnection(device as BluetoothLowEnergy.Device) as Void {
+        System.println("AerosenseSensorDelegate procConnection");
         if (_pendingSensor != null) {
             Sensor.notifyPairComplete(_pendingSensor as Sensor.SensorInfo);
             _pendingSensor = null;
@@ -72,6 +86,7 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     }
 
     public function onUnpair(sensor as Sensor.SensorInfo) as Boolean {
+        System.println("AerosenseSensorDelegate onUnpair");
         var data = sensor.data;
         if (data == null) {
             return false;
@@ -102,5 +117,113 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         info.partNumber = 0;
         info.manufacturerId = 0;
         return info;
+    }
+
+    private function _isAerosenseCandidate(result as BluetoothLowEnergy.ScanResult) as Boolean {
+        var uuids = result.getServiceUuids();
+        for (var u = uuids.next(); u != null; u = uuids.next()) {
+            if (u.equals(_profileManager.AEROSENSE_SERVICE)) {
+                System.println("AerosenseSensorDelegate matched service uuid");
+                return true;
+            }
+        }
+
+        var name = result.getDeviceName();
+        if (name != null && name.find(Constants.DEFAULT_DEVICE_NAME) == 0) {
+            System.println("AerosenseSensorDelegate matched device name");
+            return true;
+        }
+
+        var raw = result.getRawData();
+        if (_rawContainsAerosenseUuid(raw)) {
+            System.println("AerosenseSensorDelegate matched raw service uuid");
+            return true;
+        }
+        if (_rawContainsAerosenseName(raw)) {
+            System.println("AerosenseSensorDelegate matched raw name");
+            return true;
+        }
+
+        return false;
+    }
+
+    private function _rawContainsAerosenseUuid(raw as ByteArray) as Boolean {
+        var i = 0;
+        while (i < raw.size()) {
+            var len = raw[i];
+            if (len == 0 || i + len >= raw.size()) {
+                return false;
+            }
+
+            var type = raw[i + 1];
+            if (type == UUID_AD_TYPE_INCOMPLETE_128 || type == UUID_AD_TYPE_COMPLETE_128) {
+                var cursor = i + 2;
+                var end = i + 1 + len;
+                while (cursor + 15 <= end) {
+                    if (_matchesAerosenseUuidBytes(raw, cursor)) {
+                        return true;
+                    }
+                    cursor += 16;
+                }
+            }
+            i += len + 1;
+        }
+        return false;
+    }
+
+    private function _matchesAerosenseUuidBytes(raw as ByteArray, offset as Number) as Boolean {
+        return raw[offset] == 0xb1 &&
+               raw[offset + 1] == 0xc0 &&
+               raw[offset + 2] == 0xf3 &&
+               raw[offset + 3] == 0x53 &&
+               raw[offset + 4] == 0x7f &&
+               raw[offset + 5] == 0x4f &&
+               raw[offset + 6] == 0x87 &&
+               raw[offset + 7] == 0x47 &&
+               raw[offset + 8] == 0x8a &&
+               raw[offset + 9] == 0xf0 &&
+               raw[offset + 10] == 0x0c &&
+               raw[offset + 11] == 0x9d &&
+               raw[offset + 12] == 0xd0 &&
+               raw[offset + 13] == 0x53 &&
+               raw[offset + 14] == 0xcd &&
+               raw[offset + 15] == 0xa0;
+    }
+
+    private function _rawContainsAerosenseName(raw as ByteArray) as Boolean {
+        var prefix = Constants.DEFAULT_DEVICE_NAME;
+        var i = 0;
+        while (i < raw.size()) {
+            var len = raw[i];
+            if (len == 0 || i + len >= raw.size()) {
+                return false;
+            }
+
+            var type = raw[i + 1];
+            if (type == NAME_AD_TYPE_SHORT || type == NAME_AD_TYPE_COMPLETE) {
+                if (_rawNameStartsWithAerosense(raw, i + 2, i + 1 + len)) {
+                    return true;
+                }
+            }
+            i += len + 1;
+        }
+        return false;
+    }
+
+    private function _rawNameStartsWithAerosense(raw as ByteArray, start as Number,
+                                                end as Number) as Boolean {
+        if ((end - start + 1) < 9) {
+            return false;
+        }
+
+        return raw[start] == 0x41 &&
+               raw[start + 1] == 0x65 &&
+               raw[start + 2] == 0x72 &&
+               raw[start + 3] == 0x6f &&
+               raw[start + 4] == 0x73 &&
+               raw[start + 5] == 0x65 &&
+               raw[start + 6] == 0x6e &&
+               raw[start + 7] == 0x73 &&
+               raw[start + 8] == 0x65;
     }
 }
