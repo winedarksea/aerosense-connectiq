@@ -166,6 +166,7 @@ class AerosenseField extends WatchUi.DataField {
             return true;
         }
 
+        getApp().cancelAutoScan();
         ble.setScanListener(self);
         ble.startScan();
         _setLinkState(LINK_SCANNING);
@@ -189,7 +190,7 @@ class AerosenseField extends WatchUi.DataField {
         }
 
         if (ble.connectTo(result)) {
-            Storage.setValue(Constants.Keys.PAIRED_SENSOR, result);
+            Storage.setValue(Constants.Keys.PAIRED_SENSOR, true);
             ble.setScanListener(null);
             _setLinkState(LINK_PAIRING);
         } else {

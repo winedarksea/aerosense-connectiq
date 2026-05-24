@@ -81,7 +81,7 @@ class SensorConfigurationDelegate extends WatchUi.Menu2InputDelegate {
         _stopPairScan();
         var ble = getApp().getBleDelegate();
         if (ble != null && ble.connectTo(result)) {
-            Storage.setValue(Constants.Keys.PAIRED_SENSOR, result);
+            Storage.setValue(Constants.Keys.PAIRED_SENSOR, true);
             WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairLinking) as String, {});
         } else {
             WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairNotFound) as String, {});

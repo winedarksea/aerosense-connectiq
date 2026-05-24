@@ -19,12 +19,8 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     public function initialize() {
         SensorDelegate.initialize();
         _scanTimer = new Timer.Timer();
-        var app = getApp();
-        var ble = app.getBleDelegate();
-        if (ble != null) {
-            ble.setScanListener(self);
-            ble.setConnectionListener(self);
-        }
+        // BLE delegate is not set up yet when getSensorDelegate() is called
+        // (before onStart). Listeners are wired in onScan() / _completeScan().
     }
 
     public function pairingRequired() as Boolean {
@@ -43,6 +39,7 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
             return false;
         }
 
+        ble.setScanListener(self);
         _reportedScanResults = [];
         _scanActive = true;
         _scanTimer.start(method(:_onScanTimeout), SCAN_WINDOW_MS, false);
@@ -101,19 +98,15 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         return false;
     }
 
-    //! BleDelegate callback hook: connection up. Persist the paired sensor,
-    //! tell the system pairing is complete, and push any stored mass.
-    public function procConnection(device as BluetoothLowEnergy.Device) as Void {
-        if (_pendingSensor != null && _pendingScanResult != null) {
-            Storage.setValue(Constants.Keys.PAIRED_SENSOR, _pendingScanResult);
-            Sensor.notifyPairComplete(_pendingSensor);
+    //! Called by AerosenseApp.procConnection() after a BLE connection is
+    //! established. If a native-pairing flow was in progress, tells the Garmin
+    //! system the pairing completed and persists the paired state.
+    public function completePairingIfPending() as Void {
+        if (_pendingSensor != null) {
+            Storage.setValue(Constants.Keys.PAIRED_SENSOR, true);
+            Sensor.notifyPairComplete(_pendingSensor as Sensor.SensorInfo);
             _pendingSensor = null;
             _pendingScanResult = null;
-        }
-        var ble = getApp().getBleDelegate();
-        var mass = Storage.getValue(Constants.Keys.MASS_KG);
-        if (ble != null && mass != null) {
-            ble.queueMassKg(mass as Number);
         }
     }
 
@@ -131,6 +124,7 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
 
         var ble = getApp().getBleDelegate();
         if (ble != null) {
+            ble.setScanListener(null);
             ble.stopScan();
         }
 
