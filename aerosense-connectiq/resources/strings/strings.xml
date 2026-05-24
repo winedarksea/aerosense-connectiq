@@ -1,0 +1,29 @@
+<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <string id="AppName">Aerosense</string>
+
+    <string id="ConfigTitle">Aerosense</string>
+    <string id="MassKg">Total Mass (kg)</string>
+    <string id="PressureCal">Pressure Calibration</string>
+    <string id="RequestQueued">Queued</string>
+    <string id="RequestNoLink">No link</string>
+    <string id="Searching">Searching…</string>
+    <string id="NoDevice">No Aerosense Connected</string>
+    <string id="NoDeviceHint">Pair from head-unit Sensors menu</string>
+
+    <string id="label_cda">CDA</string>
+    <string id="label_wind">WIND M/S</string>
+    <string id="label_yaw">YAW</string>
+    <string id="label_grade">GRADE %</string>
+    <string id="label_power">PWR W</string>
+    <string id="label_hr">HR BPM</string>
+    <string id="label_lap">LAP</string>
+
+    <string id="TapArmed">TAP AGAIN</string>
+    <string id="TapConfirmed">COAST SENT</string>
+    <string id="TapNoLink">NO LINK</string>
+
+    <string id="SettingTapEnabled">Enable tap-to-coast</string>
+    <string id="SettingTapEnabledHint">Two-tap the field on the head unit to request a coast-down. Firmware ignores the request unless the rider is off the pedals and decelerating.</string>
+    <string id="SettingTriggerPressureCal">Trigger pressure calibration</string>
+    <string id="SettingTriggerPressureCalHint">Turn on while stationary to ask the device to recalibrate static pressure. Auto-clears once accepted.</string>
+</strings>
