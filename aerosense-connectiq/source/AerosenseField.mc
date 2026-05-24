@@ -1,11 +1,9 @@
 import Toybox.Activity;
 import Toybox.Application;
-import Toybox.Application.Storage;
 import Toybox.BluetoothLowEnergy;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.System;
-import Toybox.Timer;
 import Toybox.WatchUi;
 
 //! Primary full-screen Aerosense data field. Displays CdA, wind, yaw, grade
@@ -47,7 +45,7 @@ class AerosenseField extends WatchUi.DataField {
     private const GRADE_FLAT_THRESHOLD = 0.3;              // % below which we draw grade in white
 
     private var _model as TelemetryModel;
-    private var _fit as AerosenseFitContributor;
+    private var _fit as AerosenseFitContributor?;
 
     private var _lastSpeedWriteMs as Number = 0;
     private var _width as Number = 0;
@@ -58,8 +56,6 @@ class AerosenseField extends WatchUi.DataField {
     private var _tapStateAtMs as Number = 0;
     private var _linkState as Number = LINK_IDLE;
     private var _linkStateAtMs as Number = 0;
-    private var _pairTimer as Timer.Timer?;
-    private var _pairTimerRunning as Boolean = false;
 
     // Cached Activity.Info fields (only available in compute(), not onUpdate()).
     private var _power as Number? = null;
@@ -70,8 +66,12 @@ class AerosenseField extends WatchUi.DataField {
     public function initialize(model as TelemetryModel) {
         DataField.initialize();
         _model = model;
-        _fit = new AerosenseFitContributor(self);
-        _pairTimer = new Timer.Timer();
+        try {
+            _fit = new AerosenseFitContributor(self);
+        } catch (e) {
+            _fit = null;
+            System.println("Aerosense FIT contributor disabled: " + e.getErrorMessage());
+        }
         _tapEnabled = _readTapEnabled();
     }
 
@@ -94,7 +94,9 @@ class AerosenseField extends WatchUi.DataField {
     }
 
     public function compute(info as Activity.Info) as Void {
-        _fit.compute(_model);
+        if (_fit != null) {
+            (_fit as AerosenseFitContributor).compute(_model);
+        }
         _maybeWriteSpeed(info);
         _decayTapState();
         _decayLinkState();
@@ -170,10 +172,6 @@ class AerosenseField extends WatchUi.DataField {
         ble.setScanListener(self);
         ble.startScan();
         _setLinkState(LINK_SCANNING);
-        if (_pairTimer != null) {
-            _pairTimerRunning = true;
-            (_pairTimer as Timer.Timer).start(method(:_onPairScanTimeout), PAIR_SCAN_MS, false);
-        }
         return true;
     }
 
@@ -182,7 +180,6 @@ class AerosenseField extends WatchUi.DataField {
             return;
         }
 
-        _stopPairTimer();
         var ble = getApp().getBleDelegate();
         if (ble == null) {
             _setLinkState(LINK_NO_BLE);
@@ -190,33 +187,11 @@ class AerosenseField extends WatchUi.DataField {
         }
 
         if (ble.connectTo(result)) {
-            Storage.setValue(Constants.Keys.PAIRED_SENSOR, true);
             ble.setScanListener(null);
             _setLinkState(LINK_PAIRING);
         } else {
             ble.setScanListener(null);
             _setLinkState(LINK_FAILED);
-        }
-    }
-
-    private function _onPairScanTimeout() as Void {
-        _pairTimerRunning = false;
-        if (_linkState != LINK_SCANNING && _linkState != LINK_PAIRING) {
-            return;
-        }
-
-        var ble = getApp().getBleDelegate();
-        if (ble != null) {
-            ble.stopScan();
-            ble.setScanListener(null);
-        }
-        _setLinkState(LINK_FAILED);
-    }
-
-    private function _stopPairTimer() as Void {
-        if (_pairTimerRunning && _pairTimer != null) {
-            (_pairTimer as Timer.Timer).stop();
-            _pairTimerRunning = false;
         }
     }
 
@@ -227,6 +202,19 @@ class AerosenseField extends WatchUi.DataField {
     }
 
     private function _decayLinkState() as Void {
+        if (_linkState == LINK_SCANNING) {
+            var scanDt = System.getTimer() - _linkStateAtMs;
+            if (scanDt < 0 || scanDt >= PAIR_SCAN_MS) {
+                var ble = getApp().getBleDelegate();
+                if (ble != null) {
+                    ble.stopScan();
+                    ble.setScanListener(null);
+                }
+                _setLinkState(LINK_FAILED);
+            }
+            return;
+        }
+
         if (_linkState != LINK_FAILED && _linkState != LINK_NO_BLE) {
             return;
         }
@@ -282,7 +270,6 @@ class AerosenseField extends WatchUi.DataField {
         var ble = getApp().getBleDelegate();
         var connected = (ble != null) && ble.isConnected();
         if (connected && _linkState != LINK_IDLE) {
-            _stopPairTimer();
             if (ble != null) {
                 ble.setScanListener(null);
             }
@@ -593,10 +580,10 @@ class AerosenseField extends WatchUi.DataField {
         return Graphics.FONT_XTINY;
     }
 
-    public function onTimerStart()  as Void { _fit.setTimerRunning(true); }
-    public function onTimerStop()   as Void { _fit.setTimerRunning(false); }
-    public function onTimerPause()  as Void { _fit.setTimerRunning(false); }
-    public function onTimerResume() as Void { _fit.setTimerRunning(true); }
-    public function onTimerLap()    as Void { _fit.onTimerLap(); }
-    public function onTimerReset()  as Void { _fit.onTimerReset(); }
+    public function onTimerStart()  as Void { if (_fit != null) { (_fit as AerosenseFitContributor).setTimerRunning(true); } }
+    public function onTimerStop()   as Void { if (_fit != null) { (_fit as AerosenseFitContributor).setTimerRunning(false); } }
+    public function onTimerPause()  as Void { if (_fit != null) { (_fit as AerosenseFitContributor).setTimerRunning(false); } }
+    public function onTimerResume() as Void { if (_fit != null) { (_fit as AerosenseFitContributor).setTimerRunning(true); } }
+    public function onTimerLap()    as Void { if (_fit != null) { (_fit as AerosenseFitContributor).onTimerLap(); } }
+    public function onTimerReset()  as Void { if (_fit != null) { (_fit as AerosenseFitContributor).onTimerReset(); } }
 }

@@ -2,8 +2,6 @@ import Toybox.Application;
 import Toybox.Application.Storage;
 import Toybox.BluetoothLowEnergy;
 import Toybox.Lang;
-import Toybox.Sensor;
-import Toybox.Timer;
 import Toybox.WatchUi;
 
 class AerosenseApp extends Application.AppBase {
@@ -11,11 +9,7 @@ class AerosenseApp extends Application.AppBase {
     private var _bleDelegate as AerosenseBleDelegate?;
     private var _model as TelemetryModel?;
     private var _field as WeakReference?;
-    private var _autoScanTimer as Timer.Timer?;
     private var _autoScanActive as Boolean = false;
-    private var _sensorDelegate as AerosenseSensorDelegate?;
-
-    private const AUTO_SCAN_MS = 12000;
 
     public function initialize() {
         AppBase.initialize();
@@ -30,9 +24,12 @@ class AerosenseApp extends Application.AppBase {
         _bleDelegate.setConnectionListener(self);
         _profileManager.registerProfiles();
 
-        // If we've paired before, kick off a background scan so the device
-        // reconnects automatically without requiring a tap.
-        if (Storage.getValue(Constants.Keys.PAIRED_SENSOR) != null) {
+        // If we've paired before, reconnect from the stored ScanResult. Legacy
+        // builds stored only a boolean, so keep a scan fallback for those.
+        var paired = Storage.getValue(Constants.Keys.PAIRED_SENSOR);
+        if (paired instanceof BluetoothLowEnergy.ScanResult) {
+            _bleDelegate.connectTo(paired as BluetoothLowEnergy.ScanResult);
+        } else {
             _startAutoScan();
         }
     }
@@ -44,12 +41,6 @@ class AerosenseApp extends Application.AppBase {
         _autoScanActive = true;
         (_bleDelegate as AerosenseBleDelegate).setScanListener(self);
         (_bleDelegate as AerosenseBleDelegate).startScan();
-        _autoScanTimer = new Timer.Timer();
-        (_autoScanTimer as Timer.Timer).start(method(:_onAutoScanTimeout), AUTO_SCAN_MS, false);
-    }
-
-    public function _onAutoScanTimeout() as Void {
-        _stopAutoScan();
     }
 
     //! Called by AerosenseField when it takes over the scan listener so the
@@ -59,19 +50,11 @@ class AerosenseApp extends Application.AppBase {
             return;
         }
         _autoScanActive = false;
-        if (_autoScanTimer != null) {
-            (_autoScanTimer as Timer.Timer).stop();
-            _autoScanTimer = null;
-        }
         // Do NOT stop the BLE scan here — the field is now managing it.
     }
 
     private function _stopAutoScan() as Void {
         _autoScanActive = false;
-        if (_autoScanTimer != null) {
-            (_autoScanTimer as Timer.Timer).stop();
-            _autoScanTimer = null;
-        }
         if (_bleDelegate != null) {
             var ble = _bleDelegate as AerosenseBleDelegate;
             ble.setScanListener(null);
@@ -112,7 +95,7 @@ class AerosenseApp extends Application.AppBase {
     public function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
         var field = new AerosenseField(_model);
         _field = field.weak();
-        return [field, new AerosenseFieldDelegate(field)];
+        return [field];
     }
 
     //! Forward settings sync to the data field so it can refresh the
@@ -128,28 +111,10 @@ class AerosenseApp extends Application.AppBase {
 
     public function procConnection(device as BluetoothLowEnergy.Device) as Void {
         _stopAutoScan();
-        if (_sensorDelegate != null) {
-            _sensorDelegate.completePairingIfPending();
-        }
         var mass = Storage.getValue(Constants.Keys.MASS_KG);
         if (mass != null && _bleDelegate != null) {
             (_bleDelegate as AerosenseBleDelegate).queueMassKg(mass as Number);
         }
-    }
-
-    //! Settings for the custom data field. Device linking is handled by the
-    //! field's custom BLE scan flow, not Garmin's native sensor pairing UI.
-    public function getSensorConfigurationView(sensor as Sensor.SensorInfo)
-            as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
-        var view = new SensorConfigurationView();
-        return [view, new SensorConfigurationDelegate(view)];
-    }
-
-    public function getSensorDelegate() as Sensor.SensorDelegate or Null {
-        if (_sensorDelegate == null) {
-            _sensorDelegate = new AerosenseSensorDelegate();
-        }
-        return _sensorDelegate;
     }
 }
 

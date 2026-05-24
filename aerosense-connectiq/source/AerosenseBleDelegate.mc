@@ -1,4 +1,5 @@
 import Toybox.Application;
+import Toybox.Application.Storage;
 import Toybox.BluetoothLowEnergy;
 import Toybox.Lang;
 import Toybox.System;
@@ -14,6 +15,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     private var _telemetryChar as BluetoothLowEnergy.Characteristic?;
     private var _speedChar as BluetoothLowEnergy.Characteristic?;
     private var _settingsChar as BluetoothLowEnergy.Characteristic?;
+    private var _pendingPairResult as BluetoothLowEnergy.ScanResult?;
 
     private var _scanListener as WeakReference?;
     private var _connectionListener as WeakReference?;
@@ -76,14 +78,20 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             }
         }
 
-        return false;
+        var name = result.getDeviceName();
+        return name != null && name.find(Constants.DEFAULT_DEVICE_NAME) == 0;
     }
 
     // -- Connection ---------------------------------------------------------
 
     public function connectTo(scanResult as BluetoothLowEnergy.ScanResult) as Boolean {
         stopScan();
-        return BluetoothLowEnergy.pairDevice(scanResult) != null;
+        var device = BluetoothLowEnergy.pairDevice(scanResult);
+        if (device != null) {
+            _pendingPairResult = scanResult;
+            return true;
+        }
+        return false;
     }
 
     public function disconnect() as Void {
@@ -112,6 +120,10 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             _telemetryChar = _service.getCharacteristic(_profileManager.TELEMETRY_CHARACTERISTIC);
             _speedChar = _service.getCharacteristic(_profileManager.SPEED_CHARACTERISTIC);
             _settingsChar = _service.getCharacteristic(_profileManager.SETTINGS_CHARACTERISTIC);
+            if (_pendingPairResult != null) {
+                Storage.setValue(Constants.Keys.PAIRED_SENSOR,
+                    _pendingPairResult as BluetoothLowEnergy.ScanResult);
+            }
             _enableTelemetryNotifications();
             _notifyConnected(device);
         } else {
@@ -136,6 +148,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         _telemetryChar = null;
         _speedChar = null;
         _settingsChar = null;
+        _pendingPairResult = null;
         _settingsWriteInFlight = false;
         _settingsQueue = [];
     }

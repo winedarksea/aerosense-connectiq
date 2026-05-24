@@ -2,20 +2,15 @@ import Toybox.Application.Storage;
 import Toybox.BluetoothLowEnergy;
 import Toybox.Graphics;
 import Toybox.Lang;
-import Toybox.Timer;
 import Toybox.WatchUi;
 
 class SensorConfigurationDelegate extends WatchUi.Menu2InputDelegate {
-    private const PAIR_SCAN_MS = 10000;
-
     private var _view as SensorConfigurationView;
-    private var _pairTimer as Timer.Timer?;
-    private var _pairTimerRunning as Boolean = false;
+    private var _pairScanActive as Boolean = false;
 
     public function initialize(view as SensorConfigurationView) {
         Menu2InputDelegate.initialize();
         _view = view;
-        _pairTimer = new Timer.Timer();
     }
 
     public function onSelect(item as WatchUi.MenuItem) as Void {
@@ -70,35 +65,25 @@ class SensorConfigurationDelegate extends WatchUi.Menu2InputDelegate {
 
         ble.setScanListener(self);
         ble.startScan();
-        if (_pairTimer != null) {
-            _pairTimerRunning = true;
-            (_pairTimer as Timer.Timer).start(method(:_onPairScanTimeout), PAIR_SCAN_MS, false);
-        }
+        _pairScanActive = true;
         WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairScanning) as String, {});
     }
 
     public function onScanResult(result as BluetoothLowEnergy.ScanResult) as Void {
+        if (!_pairScanActive) {
+            return;
+        }
         _stopPairScan();
         var ble = getApp().getBleDelegate();
         if (ble != null && ble.connectTo(result)) {
-            Storage.setValue(Constants.Keys.PAIRED_SENSOR, true);
             WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairLinking) as String, {});
         } else {
             WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairNotFound) as String, {});
         }
     }
 
-    private function _onPairScanTimeout() as Void {
-        _pairTimerRunning = false;
-        _stopPairScan();
-        WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairNotFound) as String, {});
-    }
-
     private function _stopPairScan() as Void {
-        if (_pairTimerRunning && _pairTimer != null) {
-            (_pairTimer as Timer.Timer).stop();
-            _pairTimerRunning = false;
-        }
+        _pairScanActive = false;
 
         var ble = getApp().getBleDelegate();
         if (ble != null) {
