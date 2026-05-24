@@ -29,8 +29,8 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
 
     // -- Scanning -----------------------------------------------------------
 
-    public function setScanListener(listener as Object) as Void {
-        _scanListener = listener.weak();
+    public function setScanListener(listener as Object?) as Void {
+        _scanListener = (listener == null) ? null : listener.weak();
     }
 
     public function setConnectionListener(listener as Object) as Void {
@@ -75,14 +75,15 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
                 return true;
             }
         }
+
         return false;
     }
 
     // -- Connection ---------------------------------------------------------
 
-    public function connectTo(scanResult as BluetoothLowEnergy.ScanResult) as Void {
+    public function connectTo(scanResult as BluetoothLowEnergy.ScanResult) as Boolean {
         stopScan();
-        BluetoothLowEnergy.pairDevice(scanResult);
+        return BluetoothLowEnergy.pairDevice(scanResult) != null;
     }
 
     public function disconnect() as Void {
@@ -101,13 +102,18 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         if (state == BluetoothLowEnergy.CONNECTION_STATE_CONNECTED) {
             _device = device;
             _service = device.getService(_profileManager.AEROSENSE_SERVICE);
-            if (_service != null) {
-                _telemetryChar = _service.getCharacteristic(_profileManager.TELEMETRY_CHARACTERISTIC);
-                _speedChar = _service.getCharacteristic(_profileManager.SPEED_CHARACTERISTIC);
-                _settingsChar = _service.getCharacteristic(_profileManager.SETTINGS_CHARACTERISTIC);
-                _enableTelemetryNotifications();
-                _notifyConnected(device);
+            if (_service == null) {
+                BluetoothLowEnergy.unpairDevice(device);
+                _resetConnection();
+                WatchUi.requestUpdate();
+                return;
             }
+
+            _telemetryChar = _service.getCharacteristic(_profileManager.TELEMETRY_CHARACTERISTIC);
+            _speedChar = _service.getCharacteristic(_profileManager.SPEED_CHARACTERISTIC);
+            _settingsChar = _service.getCharacteristic(_profileManager.SETTINGS_CHARACTERISTIC);
+            _enableTelemetryNotifications();
+            _notifyConnected(device);
         } else {
             _resetConnection();
         }

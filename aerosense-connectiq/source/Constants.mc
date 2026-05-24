@@ -25,5 +25,7 @@ module Constants {
     const PROP_TRIGGER_PRESSURE_CAL = "trigger_pressure_cal";
 
     // Defaults shown in the pairing UI.
+    const DEFAULT_DEVICE_NAME = "Aerosense";
+    const DEFAULT_DEVICE_NAME_SHORT = "Aero";
     const DEFAULT_MASS_KG = 80;
 }

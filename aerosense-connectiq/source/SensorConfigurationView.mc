@@ -5,6 +5,8 @@ import Toybox.WatchUi;
 //! Configuration menu shown when the user adds the AerosenseField to a screen.
 //! Editable setup items for rider+bike+gear mass plus service actions.
 class SensorConfigurationView extends WatchUi.Menu2 {
+    public static const ITEM_PAIR = "pair";
+    public static const ITEM_FORGET = "forget";
     public static const ITEM_MASS = "mass";
     public static const ITEM_PRESSURE_CAL = "pressure_cal";
 
@@ -12,6 +14,18 @@ class SensorConfigurationView extends WatchUi.Menu2 {
         Menu2.initialize({:title => WatchUi.loadResource(Rez.Strings.ConfigTitle) as String});
         var storedMass = Storage.getValue(Constants.Keys.MASS_KG);
         var mass = (storedMass == null) ? Constants.DEFAULT_MASS_KG : (storedMass as Number);
+        addItem(new MenuItem(
+            WatchUi.loadResource(Rez.Strings.LinkAerosense) as String,
+            null,
+            ITEM_PAIR,
+            null
+        ));
+        addItem(new MenuItem(
+            WatchUi.loadResource(Rez.Strings.ForgetAerosense) as String,
+            null,
+            ITEM_FORGET,
+            null
+        ));
         addItem(new MenuItem(
             WatchUi.loadResource(Rez.Strings.MassKg) as String,
             mass.toString() + " kg",

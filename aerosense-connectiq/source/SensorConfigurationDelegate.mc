@@ -1,17 +1,40 @@
 import Toybox.Application.Storage;
+import Toybox.BluetoothLowEnergy;
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.Timer;
 import Toybox.WatchUi;
 
 class SensorConfigurationDelegate extends WatchUi.Menu2InputDelegate {
+    private const PAIR_SCAN_MS = 10000;
+
     private var _view as SensorConfigurationView;
+    private var _pairTimer as Timer.Timer?;
+    private var _pairTimerRunning as Boolean = false;
 
     public function initialize(view as SensorConfigurationView) {
         Menu2InputDelegate.initialize();
         _view = view;
+        _pairTimer = new Timer.Timer();
     }
 
     public function onSelect(item as WatchUi.MenuItem) as Void {
+        if (SensorConfigurationView.ITEM_PAIR.equals(item.getId())) {
+            _startPairScan();
+            return;
+        }
+
+        if (SensorConfigurationView.ITEM_FORGET.equals(item.getId())) {
+            _stopPairScan();
+            Storage.deleteValue(Constants.Keys.PAIRED_SENSOR);
+            var bleForget = getApp().getBleDelegate();
+            if (bleForget != null) {
+                bleForget.disconnect();
+            }
+            WatchUi.showToast(WatchUi.loadResource(Rez.Strings.ForgetQueued) as String, {});
+            return;
+        }
+
         if (SensorConfigurationView.ITEM_MASS.equals(item.getId())) {
             var stored = Storage.getValue(Constants.Keys.MASS_KG);
             var current = (stored == null) ? Constants.DEFAULT_MASS_KG : (stored as Number);
@@ -34,7 +57,54 @@ class SensorConfigurationDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     public function onBack() as Void {
+        _stopPairScan();
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
+    }
+
+    private function _startPairScan() as Void {
+        var ble = getApp().getBleDelegate();
+        if (ble == null) {
+            WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairNoBle) as String, {});
+            return;
+        }
+
+        ble.setScanListener(self);
+        ble.startScan();
+        if (_pairTimer != null) {
+            _pairTimerRunning = true;
+            (_pairTimer as Timer.Timer).start(method(:_onPairScanTimeout), PAIR_SCAN_MS, false);
+        }
+        WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairScanning) as String, {});
+    }
+
+    public function onScanResult(result as BluetoothLowEnergy.ScanResult) as Void {
+        _stopPairScan();
+        var ble = getApp().getBleDelegate();
+        if (ble != null && ble.connectTo(result)) {
+            Storage.setValue(Constants.Keys.PAIRED_SENSOR, result);
+            WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairLinking) as String, {});
+        } else {
+            WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairNotFound) as String, {});
+        }
+    }
+
+    private function _onPairScanTimeout() as Void {
+        _pairTimerRunning = false;
+        _stopPairScan();
+        WatchUi.showToast(WatchUi.loadResource(Rez.Strings.PairNotFound) as String, {});
+    }
+
+    private function _stopPairScan() as Void {
+        if (_pairTimerRunning && _pairTimer != null) {
+            (_pairTimer as Timer.Timer).stop();
+            _pairTimerRunning = false;
+        }
+
+        var ble = getApp().getBleDelegate();
+        if (ble != null) {
+            ble.stopScan();
+            ble.setScanListener(null);
+        }
     }
 }
 

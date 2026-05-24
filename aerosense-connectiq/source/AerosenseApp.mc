@@ -21,6 +21,7 @@ class AerosenseApp extends Application.AppBase {
         _bleDelegate = new AerosenseBleDelegate(_profileManager, _model);
 
         BluetoothLowEnergy.setDelegate(_bleDelegate);
+        _bleDelegate.setConnectionListener(self);
         _profileManager.registerProfiles();
 
         var stored = Storage.getValue(Constants.Keys.PAIRED_SENSOR);
@@ -31,6 +32,7 @@ class AerosenseApp extends Application.AppBase {
 
     public function onStop(state as Dictionary?) as Void {
         if (_bleDelegate != null) {
+            _bleDelegate.setScanListener(null);
             _bleDelegate.stopScan();
         }
         _bleDelegate = null;
@@ -67,8 +69,15 @@ class AerosenseApp extends Application.AppBase {
         }
     }
 
-    //! Connect IQ 5.1 wireless-pairing hook — invoked when the user adds this
-    //! data field to a screen and the system needs a pairing UI.
+    public function procConnection(device as BluetoothLowEnergy.Device) as Void {
+        var mass = Storage.getValue(Constants.Keys.MASS_KG);
+        if (mass != null && _bleDelegate != null) {
+            _bleDelegate.queueMassKg(mass as Number);
+        }
+    }
+
+    //! Settings for the custom data field. Device linking is handled by the
+    //! field's custom BLE scan flow, not Garmin's native sensor pairing UI.
     public function getSensorConfigurationView(sensor as Sensor.SensorInfo)
             as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
         var view = new SensorConfigurationView();
@@ -76,7 +85,7 @@ class AerosenseApp extends Application.AppBase {
     }
 
     public function getSensorDelegate() as Sensor.SensorDelegate or Null {
-        return new AerosenseSensorDelegate();
+        return null;
     }
 }
 
