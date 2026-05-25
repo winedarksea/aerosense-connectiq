@@ -10,6 +10,7 @@ import Toybox.Timer;
 //! field's normal onStart()/view lifecycle may not have created its BLE objects.
 class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     private const SCAN_TIMEOUT_MS = 10000;
+    private const PAIR_TIMEOUT_MS = 15000;
     private const UUID_AD_TYPE_INCOMPLETE_128 = 0x06;
     private const UUID_AD_TYPE_COMPLETE_128 = 0x07;
     private const NAME_AD_TYPE_SHORT = 0x08;
@@ -21,7 +22,10 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     private var _pendingScanResult as BluetoothLowEnergy.ScanResult?;
     private var _reportedScanResults as Array<BluetoothLowEnergy.ScanResult>;
     private var _scanTimer as Timer.Timer?;
+    private var _pairTimer as Timer.Timer?;
     private var _scanActive as Boolean = false;
+    private var _pairingActive as Boolean = false;
+    private var _profileReady as Boolean = false;
 
     public function initialize() {
         SensorDelegate.initialize();
@@ -29,28 +33,35 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         _bleDelegate = new AerosenseBleDelegate(_profileManager, new TelemetryModel());
         _reportedScanResults = [];
         _scanTimer = new Timer.Timer();
+        _pairTimer = new Timer.Timer();
         _bleDelegate.setScanFilterEnabled(false);
         _bleDelegate.setScanListener(self);
         _bleDelegate.setConnectionListener(self);
         BluetoothLowEnergy.setDelegate(_bleDelegate);
-        _profileManager.registerProfiles();
+        _profileReady = _profileManager.registerProfiles();
         System.println("AerosenseSensorDelegate initialized");
     }
 
     public function pairingRequired() as Boolean {
         System.println("AerosenseSensorDelegate pairingRequired");
-        return true;
+        return !_hasStoredPairing();
     }
 
     public function onScan() as Boolean {
         System.println("AerosenseSensorDelegate onScan");
-        if (Storage.getValue(Constants.Keys.PAIRED_SENSOR) != null) {
+        if (!_profileReady) {
+            Sensor.notifyError("Aerosense BLE profile registration failed");
+            return false;
+        }
+        if (_hasStoredPairing()) {
             return false;
         }
 
+        BluetoothLowEnergy.setDelegate(_bleDelegate);
         _reportedScanResults = [];
         _scanActive = true;
         _bleDelegate.setScanListener(self);
+        _bleDelegate.setConnectionListener(self);
         _bleDelegate.startScan();
         if (_scanTimer != null) {
             (_scanTimer as Timer.Timer).start(method(:finishScan), SCAN_TIMEOUT_MS, false);
@@ -80,36 +91,54 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         _scanActive = false;
         _bleDelegate.stopScan();
         _bleDelegate.setScanListener(null);
+        if (_scanTimer != null) {
+            (_scanTimer as Timer.Timer).stop();
+        }
         Sensor.notifyScanComplete();
     }
 
     public function onPair(sensor as Sensor.SensorInfo) as Boolean {
         System.println("AerosenseSensorDelegate onPair");
+        if (!_profileReady) {
+            Sensor.notifyError("Aerosense BLE profile registration failed");
+            return false;
+        }
         var data = sensor.data;
         if (data == null) {
+            Sensor.notifyError("Aerosense sensor missing BLE scan result");
             return false;
         }
 
         var scanResult = data[:bleScanResult] as BluetoothLowEnergy.ScanResult?;
         if (scanResult == null) {
+            Sensor.notifyError("Aerosense sensor missing BLE scan result");
             return false;
         }
 
+        BluetoothLowEnergy.setDelegate(_bleDelegate);
         _pendingSensor = sensor;
         _pendingScanResult = scanResult;
+        _pairingActive = true;
+        _bleDelegate.setConnectionListener(self);
         finishScan();
         if (_bleDelegate.connectTo(scanResult)) {
+            if (_pairTimer != null) {
+                (_pairTimer as Timer.Timer).start(method(:pairTimeout), PAIR_TIMEOUT_MS,
+                    false);
+            }
             return true;
         }
 
-        _pendingSensor = null;
-        _pendingScanResult = null;
+        _failPairing("Aerosense BLE pairing failed");
         return false;
     }
 
     public function procConnection(device as BluetoothLowEnergy.Device) as Void {
         System.println("AerosenseSensorDelegate procConnection");
-        if (_pendingSensor != null) {
+        if (_pairingActive && _pendingSensor != null) {
+            if (_pairTimer != null) {
+                (_pairTimer as Timer.Timer).stop();
+            }
             Sensor.notifyPairComplete(_pendingSensor as Sensor.SensorInfo);
             if (_pendingScanResult != null) {
                 Storage.setValue(Constants.Keys.PAIRED_SENSOR,
@@ -117,6 +146,23 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
             }
             _pendingSensor = null;
             _pendingScanResult = null;
+            _pairingActive = false;
+        }
+    }
+
+    public function procConnectionFailed(reason as String) as Void {
+        System.println("AerosenseSensorDelegate procConnectionFailed " + reason);
+        if (_pairingActive) {
+            _failPairing(reason);
+        }
+    }
+
+    public function pairTimeout() as Void {
+        if (_pairingActive) {
+            _bleDelegate.setConnectionListener(null);
+            _bleDelegate.disconnect();
+            _bleDelegate.setConnectionListener(self);
+            _failPairing("Aerosense BLE pairing timed out");
         }
     }
 
@@ -126,14 +172,30 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         var scanResult = (data == null) ? null : data[:bleScanResult] as BluetoothLowEnergy.ScanResult?;
         var paired = Storage.getValue(Constants.Keys.PAIRED_SENSOR) as BluetoothLowEnergy.ScanResult?;
         if (scanResult == null || paired == null || paired.isSameDevice(scanResult)) {
+            _bleDelegate.disconnect();
             Storage.deleteValue(Constants.Keys.PAIRED_SENSOR);
             Sensor.notifyUnpairComplete(sensor);
             _pendingSensor = null;
             _pendingScanResult = null;
+            _pairingActive = false;
             return true;
         }
 
         return false;
+    }
+
+    public function shutdown() as Void {
+        if (_scanTimer != null) {
+            (_scanTimer as Timer.Timer).stop();
+        }
+        if (_pairTimer != null) {
+            (_pairTimer as Timer.Timer).stop();
+        }
+        _scanActive = false;
+        _pairingActive = false;
+        _bleDelegate.setScanListener(null);
+        _bleDelegate.setConnectionListener(null);
+        _bleDelegate.stopScan();
     }
 
     private function _toSensorInfo(result as BluetoothLowEnergy.ScanResult) as Sensor.SensorInfo {
@@ -161,6 +223,21 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
             }
         }
         return false;
+    }
+
+    private function _hasStoredPairing() as Boolean {
+        return Storage.getValue(Constants.Keys.PAIRED_SENSOR) instanceof
+            BluetoothLowEnergy.ScanResult;
+    }
+
+    private function _failPairing(reason as String) as Void {
+        if (_pairTimer != null) {
+            (_pairTimer as Timer.Timer).stop();
+        }
+        _pendingSensor = null;
+        _pendingScanResult = null;
+        _pairingActive = false;
+        Sensor.notifyError(reason);
     }
 
     private function _isAerosenseCandidate(result as BluetoothLowEnergy.ScanResult) as Boolean {

@@ -10,6 +10,7 @@ class AerosenseApp extends Application.AppBase {
     private var _bleDelegate as AerosenseBleDelegate?;
     private var _model as TelemetryModel?;
     private var _field as WeakReference?;
+    private var _sensorDelegate as AerosenseSensorDelegate?;
     private var _foregroundConnectStarted as Boolean = false;
 
     public function initialize() {
@@ -23,16 +24,20 @@ class AerosenseApp extends Application.AppBase {
     }
 
     private function _startForegroundConnection() as Void {
-        if (_bleDelegate == null || _foregroundConnectStarted) {
+        if (_bleDelegate == null || _profileManager == null || _foregroundConnectStarted) {
             return;
         }
         _foregroundConnectStarted = true;
-        BluetoothLowEnergy.setDelegate(_bleDelegate);
-        _bleDelegate.setConnectionListener(self);
-        _profileManager.registerProfiles();
+        var bleDelegate = _bleDelegate as AerosenseBleDelegate;
+        var profileManager = _profileManager as ProfileManager;
+        BluetoothLowEnergy.setDelegate(bleDelegate);
+        bleDelegate.setConnectionListener(self);
+        if (!profileManager.registerProfiles()) {
+            return;
+        }
         var paired = Storage.getValue(Constants.Keys.PAIRED_SENSOR);
         if (paired instanceof BluetoothLowEnergy.ScanResult) {
-            _bleDelegate.connectTo(paired as BluetoothLowEnergy.ScanResult);
+            bleDelegate.connectTo(paired as BluetoothLowEnergy.ScanResult);
         }
     }
 
@@ -42,8 +47,13 @@ class AerosenseApp extends Application.AppBase {
             _bleDelegate.stopScan();
         }
         _bleDelegate = null;
+        if (_sensorDelegate != null) {
+            (_sensorDelegate as AerosenseSensorDelegate).shutdown();
+        }
+        _sensorDelegate = null;
         _profileManager = null;
         _model = null;
+        _foregroundConnectStarted = false;
     }
 
     public function getModel() as TelemetryModel {
@@ -93,7 +103,10 @@ class AerosenseApp extends Application.AppBase {
     //! foreground data-field BLE delegate because Garmin may instantiate it in
     //! the system pairing UI without running the data field view.
     public function getSensorDelegate() as Sensor.SensorDelegate or Null {
-        return new AerosenseSensorDelegate();
+        if (_sensorDelegate == null) {
+            _sensorDelegate = new AerosenseSensorDelegate();
+        }
+        return _sensorDelegate;
     }
 
 }

@@ -1,5 +1,8 @@
 import Toybox.BluetoothLowEnergy;
 import Toybox.Lang;
+import Toybox.System;
+
+var _aerosenseProfileRegistered as Boolean = false;
 
 //! Aerosense BLE GATT profile.
 //! UUID base: 53f3c0bX-4f7f-4787-8af0-0c9dd053cda0
@@ -30,7 +33,18 @@ class ProfileManager {
         }]
     };
 
-    public function registerProfiles() as Void {
-        BluetoothLowEnergy.registerProfile(_aerosenseProfileDef);
+    public function registerProfiles() as Boolean {
+        if (_aerosenseProfileRegistered) {
+            return true;
+        }
+        try {
+            BluetoothLowEnergy.registerProfile(_aerosenseProfileDef);
+            _aerosenseProfileRegistered = true;
+            return true;
+        } catch (e) {
+            System.println("Aerosense BLE profile registration failed: " +
+                e.getErrorMessage());
+            return false;
+        }
     }
 }

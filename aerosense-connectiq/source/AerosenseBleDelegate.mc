@@ -36,8 +36,8 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         _scanListener = (listener == null) ? null : listener.weak();
     }
 
-    public function setConnectionListener(listener as Object) as Void {
-        _connectionListener = listener.weak();
+    public function setConnectionListener(listener as Object?) as Void {
+        _connectionListener = (listener == null) ? null : listener.weak();
     }
 
     public function setScanFilterEnabled(enabled as Boolean) as Void {
@@ -91,11 +91,19 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
 
     public function connectTo(scanResult as BluetoothLowEnergy.ScanResult) as Boolean {
         stopScan();
-        var device = BluetoothLowEnergy.pairDevice(scanResult);
+        var device = null;
+        try {
+            device = BluetoothLowEnergy.pairDevice(scanResult);
+        } catch (e) {
+            System.println("Aerosense BLE pairDevice failed: " + e.getErrorMessage());
+            _notifyConnectionFailed("Pairing failed");
+            return false;
+        }
         if (device != null) {
             _pendingPairResult = scanResult;
             return true;
         }
+        _notifyConnectionFailed("Pairing returned no device");
         return false;
     }
 
@@ -118,6 +126,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             if (_service == null) {
                 BluetoothLowEnergy.unpairDevice(device);
                 _resetConnection();
+                _notifyConnectionFailed("Aerosense service not found");
                 WatchUi.requestUpdate();
                 return;
             }
@@ -125,6 +134,13 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             _telemetryChar = _service.getCharacteristic(_profileManager.TELEMETRY_CHARACTERISTIC);
             _speedChar = _service.getCharacteristic(_profileManager.SPEED_CHARACTERISTIC);
             _settingsChar = _service.getCharacteristic(_profileManager.SETTINGS_CHARACTERISTIC);
+            if (_telemetryChar == null || _settingsChar == null) {
+                BluetoothLowEnergy.unpairDevice(device);
+                _resetConnection();
+                _notifyConnectionFailed("Aerosense characteristics not found");
+                WatchUi.requestUpdate();
+                return;
+            }
             if (_pendingPairResult != null) {
                 Storage.setValue(Constants.Keys.PAIRED_SENSOR,
                     _pendingPairResult as BluetoothLowEnergy.ScanResult);
@@ -133,6 +149,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             _notifyConnected(device);
         } else {
             _resetConnection();
+            _notifyConnectionFailed("Disconnected");
         }
         WatchUi.requestUpdate();
     }
@@ -163,6 +180,15 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             var listener = _connectionListener.get();
             if (listener != null && (listener has :procConnection)) {
                 listener.procConnection(device);
+            }
+        }
+    }
+
+    private function _notifyConnectionFailed(reason as String) as Void {
+        if (_connectionListener != null && _connectionListener.stillAlive()) {
+            var listener = _connectionListener.get();
+            if (listener != null && (listener has :procConnectionFailed)) {
+                listener.procConnectionFailed(reason);
             }
         }
     }
