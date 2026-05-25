@@ -214,13 +214,6 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         return true;
     }
 
-    //! Request a coast-down capture. Firmware enforces preconditions (no pedal
-    //! power, decelerating, no capture in flight) — this is a request, not a
-    //! command.
-    public function queueCoastDownRequest() as Boolean {
-        return _queueSettingsTlv(_buildRequestTlv(Constants.SETTINGS_TYPE_COAST_DOWN_REQUEST));
-    }
-
     //! Request a static pressure calibration. Firmware enforces stationary +
     //! settled-pressure preconditions.
     public function queuePressureCalRequest() as Boolean {

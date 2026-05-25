@@ -19,14 +19,6 @@ class AerosenseField extends WatchUi.DataField {
     // aero grid. Tune against the simulator for each target device.
     private const LAYOUT_EXTENDED_MIN_GRID_H = 180;
 
-    // Tap-to-coast-down state.
-    private const TAP_IDLE = 0;
-    private const TAP_ARMED = 1;
-    private const TAP_CONFIRMED = 2;
-    private const TAP_NO_LINK = 3;
-    private const ARM_WINDOW_MS = 2500;
-    private const CONFIRM_FEEDBACK_MS = 1200;
-
     // Accent colors. All targeted Edge devices have full color.
     private const COLOR_ACCENT  = Graphics.COLOR_YELLOW;   // CdA — the marquee value
     private const COLOR_CLIMB   = Graphics.COLOR_ORANGE;   // positive grade
@@ -39,10 +31,6 @@ class AerosenseField extends WatchUi.DataField {
     private var _lastSpeedWriteMs as Number = 0;
     private var _width as Number = 0;
     private var _height as Number = 0;
-
-    private var _tapEnabled as Boolean = true;
-    private var _tapState as Number = TAP_IDLE;
-    private var _tapStateAtMs as Number = 0;
 
     // Cached Activity.Info fields (only available in compute(), not onUpdate()).
     private var _power as Number? = null;
@@ -59,20 +47,10 @@ class AerosenseField extends WatchUi.DataField {
             _fit = null;
             System.println("Aerosense FIT contributor disabled: " + e.getErrorMessage());
         }
-        _tapEnabled = _readTapEnabled();
     }
 
     public function onSettingsChanged() as Void {
-        _tapEnabled = _readTapEnabled();
-        if (!_tapEnabled && _tapState != TAP_IDLE) {
-            _tapState = TAP_IDLE;
-            WatchUi.requestUpdate();
-        }
-    }
-
-    private function _readTapEnabled() as Boolean {
-        var v = Application.Properties.getValue(Constants.PROP_TAP_TO_COAST_ENABLED);
-        return (v == null) ? true : v;
+        WatchUi.requestUpdate();
     }
 
     public function onLayout(dc as Graphics.Dc) as Void {
@@ -85,24 +63,11 @@ class AerosenseField extends WatchUi.DataField {
             (_fit as AerosenseFitContributor).compute(_model);
         }
         _maybeWriteSpeed(info);
-        _decayTapState();
         _maybeForwardPressureCalRequest();
         _power     = (info has :currentPower)     ? info.currentPower     : null;
         _heartRate = (info has :currentHeartRate) ? info.currentHeartRate : null;
         _distanceM = (info has :elapsedDistance)  ? info.elapsedDistance  : null;
         _lapTimeMs = (info has :timerTimeInLap)   ? info.timerTimeInLap   : null;
-    }
-
-    private function _decayTapState() as Void {
-        if (_tapState == TAP_IDLE) { return; }
-        var now = System.getTimer();
-        var dt = now - _tapStateAtMs;
-        var window = (_tapState == TAP_ARMED) ? ARM_WINDOW_MS : CONFIRM_FEEDBACK_MS;
-        // System.getTimer() can wrap; treat negative deltas as elapsed.
-        if (dt < 0 || dt >= window) {
-            _tapState = TAP_IDLE;
-            WatchUi.requestUpdate();
-        }
     }
 
     private function _maybeForwardPressureCalRequest() as Void {
@@ -119,40 +84,6 @@ class AerosenseField extends WatchUi.DataField {
         if (ble.queuePressureCalRequest()) {
             Application.Properties.setValue(Constants.PROP_TRIGGER_PRESSURE_CAL, false);
         }
-    }
-
-    public function handleTap() as Boolean {
-        var ble = getApp().getBleDelegate();
-        if (ble == null || !ble.isConnected()) {
-            _tapState = TAP_NO_LINK;
-            _tapStateAtMs = System.getTimer();
-            WatchUi.requestUpdate();
-            return true;
-        }
-
-        if (!_tapEnabled) {
-            return false;
-        }
-        var now = System.getTimer();
-        if (_tapState == TAP_ARMED) {
-            var dt = now - _tapStateAtMs;
-            if (dt >= 0 && dt < ARM_WINDOW_MS) {
-                _fireCoastDown(now);
-                return true;
-            }
-        }
-        _tapState = TAP_ARMED;
-        _tapStateAtMs = now;
-        WatchUi.requestUpdate();
-        return true;
-    }
-
-    private function _fireCoastDown(now as Number) as Void {
-        var ble = getApp().getBleDelegate();
-        var ok = (ble != null) && ble.isConnected() && ble.queueCoastDownRequest();
-        _tapState = ok ? TAP_CONFIRMED : TAP_NO_LINK;
-        _tapStateAtMs = now;
-        WatchUi.requestUpdate();
     }
 
     private function _maybeWriteSpeed(info as Activity.Info) as Void {
@@ -217,8 +148,7 @@ class AerosenseField extends WatchUi.DataField {
     }
 
     //! Slim top strip: status dot left, battery % right, state chips + wordmark
-    //! in the middle (wordmark dropped when space is tight). When a tap-to-coast
-    //! message is active it replaces the chips entirely.
+    //! in the middle (wordmark dropped when space is tight).
     //! Returns the strip's height in px so the grid knows where to start.
     private function _drawHeader(dc as Graphics.Dc, fg as Number, dim as Number,
                                  connected as Boolean, fresh as Boolean) as Number {
@@ -241,7 +171,7 @@ class AerosenseField extends WatchUi.DataField {
         // Compute battery string so we know how much right-side space it takes.
         var battStr = null as String?;
         var battReserveW = 0;
-        if (fresh && _tapState == TAP_IDLE && _model.batteryPct > 0) {
+        if (fresh && _model.batteryPct > 0) {
             battStr = _model.batteryPct.toString() + "%";
             battReserveW = dc.getTextWidthInPixels(battStr, font) + 4;
             dc.setColor(dim, Graphics.COLOR_TRANSPARENT);
@@ -249,23 +179,7 @@ class AerosenseField extends WatchUi.DataField {
         }
         var rightEdge = _width - EDGE_PAD - battReserveW;
 
-        if (_tapState != TAP_IDLE) {
-            // Tap feedback replaces wordmark and chips.
-            var tapMsg = "" as String;
-            var tapColor = dim;
-            if (_tapState == TAP_ARMED) {
-                tapMsg = WatchUi.loadResource(Rez.Strings.TapArmed) as String;
-                tapColor = Graphics.COLOR_YELLOW;
-            } else if (_tapState == TAP_CONFIRMED) {
-                tapMsg = WatchUi.loadResource(Rez.Strings.TapConfirmed) as String;
-                tapColor = Graphics.COLOR_GREEN;
-            } else if (_tapState == TAP_NO_LINK) {
-                tapMsg = WatchUi.loadResource(Rez.Strings.TapNoLink) as String;
-                tapColor = Graphics.COLOR_RED;
-            }
-            dc.setColor(tapColor, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(contentX, 2, font, tapMsg, Graphics.TEXT_JUSTIFY_LEFT);
-        } else if (connected && fresh) {
+        if (connected && fresh) {
             // Wordmark + motion/surface chips. Drop wordmark when space is tight.
             var mCode = _model.motionCode();
             var sCode = _model.surfaceCode();

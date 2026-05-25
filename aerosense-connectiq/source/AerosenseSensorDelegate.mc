@@ -44,6 +44,10 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
 
     public function onScan() as Boolean {
         System.println("AerosenseSensorDelegate onScan");
+        if (Storage.getValue(Constants.Keys.PAIRED_SENSOR) != null) {
+            return false;
+        }
+
         _reportedScanResults = [];
         _scanActive = true;
         _bleDelegate.setScanListener(self);

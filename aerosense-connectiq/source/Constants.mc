@@ -16,12 +16,10 @@ module Constants {
     // Settings TLV types written to characteristic 53f3c0b6.
     // Firmware mirror: keep these byte values in sync with the Zephyr handler.
     const SETTINGS_TYPE_MASS_KG_X10        = 0x01;
-    const SETTINGS_TYPE_COAST_DOWN_REQUEST = 0x03;
     const SETTINGS_TYPE_PRESSURE_CAL_REQUEST = 0x04;
 
     // Application.Properties keys (must match resources/settings/properties.xml).
     const PROP_MASS_KG = "mass_kg";
-    const PROP_TAP_TO_COAST_ENABLED = "tap_to_coast_enabled";
     const PROP_TRIGGER_PRESSURE_CAL = "trigger_pressure_cal";
 
     // BLE advertisement defaults.

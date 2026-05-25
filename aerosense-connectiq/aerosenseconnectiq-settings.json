@@ -15,21 +15,6 @@
     "configMax" : 200,
     "configMaxLength" : null
   }, {
-    "key" : "tap_to_coast_enabled",
-    "valueType" : "boolean",
-    "defaultValue" : true,
-    "configTitle" : "SettingTapEnabled",
-    "configPrompt" : null,
-    "configType" : "boolean",
-    "configError" : null,
-    "configHelpUrl" : null,
-    "configReadonly" : false,
-    "configRequired" : false,
-    "configOptions" : null,
-    "configMin" : null,
-    "configMax" : null,
-    "configMaxLength" : null
-  }, {
     "key" : "trigger_pressure_cal",
     "valueType" : "boolean",
     "defaultValue" : false,
@@ -50,11 +35,8 @@
     "valyrian" : {
       "SettingMassKg" : "Total mass (kg)",
       "SettingTriggerPressureCalHint" : "Turn on while stationary to ask the device to recalibrate static pressure. Auto-clears once accepted.",
-      "SettingTapEnabledHint" : "Two-tap the field on the head unit to request a coast-down. Firmware ignores the request unless the rider is off the pedals and decelerating.",
       "label_wind" : "WIND M/S",
-      "TapNoLink" : "NO LINK",
       "NoDevice" : "No Aerosense Connected",
-      "TapConfirmed" : "COAST SENT",
       "label_hr" : "HR BPM",
       "label_power" : "PWR W",
       "AppName" : "Aerosense",
@@ -63,19 +45,14 @@
       "Searching" : "Searching...",
       "NoDeviceHint" : "Pair in Sensors & Accessories",
       "label_grade" : "GRADE %",
-      "SettingTapEnabled" : "Enable tap-to-coast",
       "label_lap" : "LAP",
-      "label_cda" : "CDA",
-      "TapArmed" : "TAP AGAIN"
+      "label_cda" : "CDA"
     },
     "eng" : {
       "SettingMassKg" : "Total mass (kg)",
       "SettingTriggerPressureCalHint" : "Turn on while stationary to ask the device to recalibrate static pressure. Auto-clears once accepted.",
-      "SettingTapEnabledHint" : "Two-tap the field on the head unit to request a coast-down. Firmware ignores the request unless the rider is off the pedals and decelerating.",
       "label_wind" : "WIND M/S",
-      "TapNoLink" : "NO LINK",
       "NoDevice" : "No Aerosense Connected",
-      "TapConfirmed" : "COAST SENT",
       "label_hr" : "HR BPM",
       "label_power" : "PWR W",
       "AppName" : "Aerosense",
@@ -84,10 +61,8 @@
       "Searching" : "Searching...",
       "NoDeviceHint" : "Pair in Sensors & Accessories",
       "label_grade" : "GRADE %",
-      "SettingTapEnabled" : "Enable tap-to-coast",
       "label_lap" : "LAP",
-      "label_cda" : "CDA",
-      "TapArmed" : "TAP AGAIN"
+      "label_cda" : "CDA"
     }
   }
 }

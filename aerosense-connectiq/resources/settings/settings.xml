@@ -2,9 +2,6 @@
     <setting propertyKey="@Properties.mass_kg" title="@Strings.SettingMassKg">
         <settingConfig type="numeric" min="20" max="200" />
     </setting>
-    <setting propertyKey="@Properties.tap_to_coast_enabled" title="@Strings.SettingTapEnabled">
-        <settingConfig type="boolean" />
-    </setting>
     <setting propertyKey="@Properties.trigger_pressure_cal" title="@Strings.SettingTriggerPressureCal">
         <settingConfig type="boolean" />
     </setting>
