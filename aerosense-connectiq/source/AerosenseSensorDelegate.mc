@@ -172,22 +172,26 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     }
 
     private function _matchesAerosenseUuidBytes(raw as ByteArray, offset as Number) as Boolean {
-        return raw[offset] == 0xb1 &&
-               raw[offset + 1] == 0xc0 &&
-               raw[offset + 2] == 0xf3 &&
-               raw[offset + 3] == 0x53 &&
-               raw[offset + 4] == 0x7f &&
-               raw[offset + 5] == 0x4f &&
-               raw[offset + 6] == 0x87 &&
-               raw[offset + 7] == 0x47 &&
-               raw[offset + 8] == 0x8a &&
-               raw[offset + 9] == 0xf0 &&
-               raw[offset + 10] == 0x0c &&
-               raw[offset + 11] == 0x9d &&
-               raw[offset + 12] == 0xd0 &&
-               raw[offset + 13] == 0x53 &&
-               raw[offset + 14] == 0xcd &&
-               raw[offset + 15] == 0xa0;
+        // UUID 53f3c0b1-4f7f-4787-8af0-0c9dd053cda0 in BLE little-endian wire order.
+        // Zephyr BT_UUID_128_ENCODE emits each component LSB-first, so the full
+        // 16-byte sequence in the AD packet is the bitwise reversal of the RFC 4122
+        // string representation.
+        return raw[offset]      == 0xa0 &&
+               raw[offset + 1]  == 0xcd &&
+               raw[offset + 2]  == 0x53 &&
+               raw[offset + 3]  == 0xd0 &&
+               raw[offset + 4]  == 0x9d &&
+               raw[offset + 5]  == 0x0c &&
+               raw[offset + 6]  == 0xf0 &&
+               raw[offset + 7]  == 0x8a &&
+               raw[offset + 8]  == 0x87 &&
+               raw[offset + 9]  == 0x47 &&
+               raw[offset + 10] == 0x7f &&
+               raw[offset + 11] == 0x4f &&
+               raw[offset + 12] == 0xb1 &&
+               raw[offset + 13] == 0xc0 &&
+               raw[offset + 14] == 0xf3 &&
+               raw[offset + 15] == 0x53;
     }
 
     private function _rawContainsAerosenseName(raw as ByteArray) as Boolean {

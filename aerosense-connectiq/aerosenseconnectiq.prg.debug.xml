@@ -9,8 +9,8 @@
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/ProfileManager.mc" id="1" lineNum="11" parent="globals/ProfileManager" pc="268435556" symbol="&lt;init&gt;"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/ProfileManager.mc" id="1" lineNum="12" parent="globals/ProfileManager" pc="268435580" symbol="&lt;init&gt;"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/ProfileManager.mc" id="1" lineNum="14" parent="globals/ProfileManager" pc="268435604" symbol="&lt;init&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="2" lineNum="129" parent="globals" pc="268435756" symbol="getApp"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="2" lineNum="130" parent="globals" pc="268435766" symbol="getApp"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="2" lineNum="135" parent="globals" pc="268435756" symbol="getApp"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="2" lineNum="136" parent="globals" pc="268435766" symbol="getApp"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/gen/006-B3843-00/source/Rez.mcgen" id="3" lineNum="7" parent="globals/Rez" pc="268435777" symbol="&lt;init&gt;"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/SensorConfigurationDelegate.mc" id="4" lineNum="155" parent="globals/MassPickerDelegate" pc="268435797" symbol="&lt;init&gt;"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/SensorConfigurationView.mc" id="5" lineNum="7" parent="globals/SensorConfigurationView" pc="268435809" symbol="&lt;init&gt;"/>
@@ -68,23 +68,23 @@
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/SensorConfigurationDelegate.mc" id="24" lineNum="98" parent="globals/MassPicker" pc="268436707" symbol="initialize"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/SensorConfigurationDelegate.mc" id="24" lineNum="99" parent="globals/MassPicker" pc="268436710" symbol="initialize"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/SensorConfigurationDelegate.mc" id="24" lineNum="100" parent="globals/MassPicker" pc="268436737" symbol="initialize"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="193" parent="globals/AerosenseSensorDelegate" pc="268436899" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="194" parent="globals/AerosenseSensorDelegate" pc="268436902" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="195" parent="globals/AerosenseSensorDelegate" pc="268436909" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="196" parent="globals/AerosenseSensorDelegate" pc="268436912" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="197" parent="globals/AerosenseSensorDelegate" pc="268436925" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="198" parent="globals/AerosenseSensorDelegate" pc="268436932" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="199" parent="globals/AerosenseSensorDelegate" pc="268436955" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="202" parent="globals/AerosenseSensorDelegate" pc="268436960" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="203" parent="globals/AerosenseSensorDelegate" pc="268436970" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="204" parent="globals/AerosenseSensorDelegate" pc="268436986" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="205" parent="globals/AerosenseSensorDelegate" pc="268437012" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="208" parent="globals/AerosenseSensorDelegate" pc="268437020" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="210" parent="globals/AerosenseSensorDelegate" pc="268437033" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="26" lineNum="213" parent="globals/AerosenseSensorDelegate" pc="268437035" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawNameStartsWithAerosense&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="26" lineNum="215" parent="globals/AerosenseSensorDelegate" pc="268437037" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawNameStartsWithAerosense&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="26" lineNum="216" parent="globals/AerosenseSensorDelegate" pc="268437051" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawNameStartsWithAerosense&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="26" lineNum="219" parent="globals/AerosenseSensorDelegate" pc="268437056" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawNameStartsWithAerosense&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="197" parent="globals/AerosenseSensorDelegate" pc="268436899" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="198" parent="globals/AerosenseSensorDelegate" pc="268436902" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="199" parent="globals/AerosenseSensorDelegate" pc="268436909" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="200" parent="globals/AerosenseSensorDelegate" pc="268436912" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="201" parent="globals/AerosenseSensorDelegate" pc="268436925" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="202" parent="globals/AerosenseSensorDelegate" pc="268436932" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="203" parent="globals/AerosenseSensorDelegate" pc="268436955" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="206" parent="globals/AerosenseSensorDelegate" pc="268436960" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="207" parent="globals/AerosenseSensorDelegate" pc="268436970" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="208" parent="globals/AerosenseSensorDelegate" pc="268436986" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="209" parent="globals/AerosenseSensorDelegate" pc="268437012" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="212" parent="globals/AerosenseSensorDelegate" pc="268437020" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="25" lineNum="214" parent="globals/AerosenseSensorDelegate" pc="268437033" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseName&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="26" lineNum="217" parent="globals/AerosenseSensorDelegate" pc="268437035" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawNameStartsWithAerosense&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="26" lineNum="219" parent="globals/AerosenseSensorDelegate" pc="268437037" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawNameStartsWithAerosense&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="26" lineNum="220" parent="globals/AerosenseSensorDelegate" pc="268437051" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawNameStartsWithAerosense&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="26" lineNum="223" parent="globals/AerosenseSensorDelegate" pc="268437056" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawNameStartsWithAerosense&gt;"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="27" lineNum="38" parent="globals/AerosenseSensorDelegate" pc="268437201" symbol="onScan"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="27" lineNum="39" parent="globals/AerosenseSensorDelegate" pc="268437203" symbol="onScan"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="27" lineNum="40" parent="globals/AerosenseSensorDelegate" pc="268437221" symbol="onScan"/>
@@ -132,7 +132,7 @@
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="30" lineNum="100" parent="globals/AerosenseSensorDelegate" pc="268437691" symbol="onUnpair"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="30" lineNum="103" parent="globals/AerosenseSensorDelegate" pc="268437696" symbol="onUnpair"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="31" lineNum="174" parent="globals/AerosenseSensorDelegate" pc="268437698" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_matchesAerosenseUuidBytes&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="31" lineNum="175" parent="globals/AerosenseSensorDelegate" pc="268437700" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_matchesAerosenseUuidBytes&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="31" lineNum="179" parent="globals/AerosenseSensorDelegate" pc="268437700" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_matchesAerosenseUuidBytes&gt;"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="32" lineNum="150" parent="globals/AerosenseSensorDelegate" pc="268437974" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseUuid&gt;"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="32" lineNum="151" parent="globals/AerosenseSensorDelegate" pc="268437977" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseUuid&gt;"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseSensorDelegate.mc" id="32" lineNum="152" parent="globals/AerosenseSensorDelegate" pc="268437980" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_rawContainsAerosenseUuid&gt;"/>
@@ -971,31 +971,34 @@
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="135" lineNum="106" parent="globals/AerosenseApp" pc="268449585" symbol="onSettingsChanged"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="135" lineNum="107" parent="globals/AerosenseApp" pc="268449598" symbol="onSettingsChanged"/>
         <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="135" lineNum="108" parent="globals/AerosenseApp" pc="268449615" symbol="onSettingsChanged"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="136" lineNum="15" parent="globals/AerosenseApp" pc="268449631" symbol="initialize"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="136" lineNum="16" parent="globals/AerosenseApp" pc="268449633" symbol="initialize"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="137" lineNum="113" parent="globals/AerosenseApp" pc="268449646" symbol="procConnection"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="137" lineNum="114" parent="globals/AerosenseApp" pc="268449649" symbol="procConnection"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="137" lineNum="115" parent="globals/AerosenseApp" pc="268449656" symbol="procConnection"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="137" lineNum="116" parent="globals/AerosenseApp" pc="268449672" symbol="procConnection"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="137" lineNum="117" parent="globals/AerosenseApp" pc="268449687" symbol="procConnection"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="57" parent="globals/AerosenseApp" pc="268449707" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="58" parent="globals/AerosenseApp" pc="268449710" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="59" parent="globals/AerosenseApp" pc="268449718" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="60" parent="globals/AerosenseApp" pc="268449727" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="61" parent="globals/AerosenseApp" pc="268449734" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="62" parent="globals/AerosenseApp" pc="268449745" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="66" parent="globals/AerosenseApp" pc="268449757" symbol="onScanResult"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="67" parent="globals/AerosenseApp" pc="268449759" symbol="onScanResult"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="68" parent="globals/AerosenseApp" pc="268449766" symbol="onScanResult"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="69" parent="globals/AerosenseApp" pc="268449775" symbol="onScanResult"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="73" parent="globals/AerosenseApp" pc="268449795" symbol="onStop"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="74" parent="globals/AerosenseApp" pc="268449797" symbol="onStop"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="75" parent="globals/AerosenseApp" pc="268449804" symbol="onStop"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="76" parent="globals/AerosenseApp" pc="268449813" symbol="onStop"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="77" parent="globals/AerosenseApp" pc="268449828" symbol="onStop"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="79" parent="globals/AerosenseApp" pc="268449843" symbol="onStop"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="80" parent="globals/AerosenseApp" pc="268449851" symbol="onStop"/>
-        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="81" parent="globals/AerosenseApp" pc="268449859" symbol="onStop"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="136" lineNum="128" parent="globals/AerosenseApp" pc="268449631" symbol="getSensorConfigurationView"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="136" lineNum="130" parent="globals/AerosenseApp" pc="268449634" symbol="getSensorConfigurationView"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="136" lineNum="131" parent="globals/AerosenseApp" pc="268449654" symbol="getSensorConfigurationView"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="137" lineNum="15" parent="globals/AerosenseApp" pc="268449687" symbol="initialize"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="137" lineNum="16" parent="globals/AerosenseApp" pc="268449689" symbol="initialize"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="113" parent="globals/AerosenseApp" pc="268449702" symbol="procConnection"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="114" parent="globals/AerosenseApp" pc="268449705" symbol="procConnection"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="115" parent="globals/AerosenseApp" pc="268449712" symbol="procConnection"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="116" parent="globals/AerosenseApp" pc="268449728" symbol="procConnection"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="138" lineNum="117" parent="globals/AerosenseApp" pc="268449743" symbol="procConnection"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="57" parent="globals/AerosenseApp" pc="268449763" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="58" parent="globals/AerosenseApp" pc="268449766" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="59" parent="globals/AerosenseApp" pc="268449774" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="60" parent="globals/AerosenseApp" pc="268449783" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="61" parent="globals/AerosenseApp" pc="268449790" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="139" lineNum="62" parent="globals/AerosenseApp" pc="268449801" symbol="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="66" parent="globals/AerosenseApp" pc="268449813" symbol="onScanResult"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="67" parent="globals/AerosenseApp" pc="268449815" symbol="onScanResult"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="68" parent="globals/AerosenseApp" pc="268449822" symbol="onScanResult"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="140" lineNum="69" parent="globals/AerosenseApp" pc="268449831" symbol="onScanResult"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="141" lineNum="73" parent="globals/AerosenseApp" pc="268449851" symbol="onStop"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="141" lineNum="74" parent="globals/AerosenseApp" pc="268449853" symbol="onStop"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="141" lineNum="75" parent="globals/AerosenseApp" pc="268449860" symbol="onStop"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="141" lineNum="76" parent="globals/AerosenseApp" pc="268449869" symbol="onStop"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="141" lineNum="77" parent="globals/AerosenseApp" pc="268449884" symbol="onStop"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="141" lineNum="79" parent="globals/AerosenseApp" pc="268449899" symbol="onStop"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="141" lineNum="80" parent="globals/AerosenseApp" pc="268449907" symbol="onStop"/>
+        <entry filename="/Users/colincatlin/Documents-NoCloud/aerosense-connectiq/aerosense-connectiq/source/AerosenseApp.mc" id="141" lineNum="81" parent="globals/AerosenseApp" pc="268449915" symbol="onStop"/>
     </pcToLineNum>
     <symbolTable>
         <entry field="true" id="38" symbol="&lt;globals/AerosenseSensorDelegate/&lt;&gt;_profileManager&gt;"/>
@@ -1233,6 +1236,7 @@
         <entry id="206" symbol="timerTimeInLap"/>
         <entry field="true" id="144" symbol="&lt;globals/AerosenseField/&lt;&gt;_linkState&gt;"/>
         <entry field="true" id="140" symbol="&lt;globals/AerosenseField/&lt;&gt;_heartRate&gt;"/>
+        <entry id="8392312" method="true" symbol="getSensorConfigurationView"/>
         <entry id="8389751" method="true" symbol="onTimerLap"/>
         <entry id="8389280" method="true" symbol="getInitialView"/>
         <entry id="8389281" method="true" symbol="onStop"/>
@@ -1568,11 +1572,13 @@
         <entry arg="true" endPc="268449558" name="state" stackId="1" startPc="268449369"/>
         <entry endPc="268449557" name="paired" stackId="2" startPc="268449372"/>
         <entry endPc="268449626" name="f" stackId="1" startPc="268449585"/>
-        <entry arg="true" endPc="268449706" name="device" stackId="1" startPc="268449646"/>
-        <entry endPc="268449705" name="mass" stackId="2" startPc="268449649"/>
-        <entry endPc="268449752" name="ble" stackId="1" startPc="268449727"/>
-        <entry arg="true" endPc="268449794" name="result" stackId="1" startPc="268449757"/>
-        <entry arg="true" endPc="268449867" name="state" stackId="1" startPc="268449795"/>
+        <entry arg="true" endPc="268449686" name="sensor" stackId="1" startPc="268449631"/>
+        <entry endPc="268449686" name="view" stackId="2" startPc="268449634"/>
+        <entry arg="true" endPc="268449762" name="device" stackId="1" startPc="268449702"/>
+        <entry endPc="268449761" name="mass" stackId="2" startPc="268449705"/>
+        <entry endPc="268449808" name="ble" stackId="1" startPc="268449783"/>
+        <entry arg="true" endPc="268449850" name="result" stackId="1" startPc="268449813"/>
+        <entry arg="true" endPc="268449923" name="state" stackId="1" startPc="268449851"/>
     </localVars>
     <deviceInfo deviceVersion="45fe3cbb0de8ea0a70e12628d2697915f1272301" partNumber="006-B3843-00"/>
     <annotations>
@@ -1625,9 +1631,9 @@
         <dataEntry label="globals/AerosenseField" offset="1877" parentId="globals" symbolId="AerosenseField" type="class"/>
         <dataEntry label="globals/SensorConfigurationDelegate" offset="2344" parentId="globals" symbolId="SensorConfigurationDelegate" type="class"/>
         <dataEntry label="globals/AerosenseApp" offset="2451" parentId="globals" symbolId="AerosenseApp" type="class"/>
-        <dataEntry label="globals/Rez/Drawables" offset="2657" parentId="Rez" symbolId="Drawables" type="module"/>
-        <dataEntry label="globals/Rez/Strings" offset="2692" parentId="Rez" symbolId="Strings" type="module"/>
-        <dataEntry label="globals/Constants/Keys" offset="2988" parentId="Constants" symbolId="Keys" type="module"/>
+        <dataEntry label="globals/Rez/Drawables" offset="2666" parentId="Rez" symbolId="Drawables" type="module"/>
+        <dataEntry label="globals/Rez/Strings" offset="2701" parentId="Rez" symbolId="Strings" type="module"/>
+        <dataEntry label="globals/Constants/Keys" offset="2997" parentId="Constants" symbolId="Keys" type="module"/>
     </dataEntryOffsetMappings>
     <functions>
         <functionEntry accessMode="public" endPc="268435755" name="&lt;init&gt;" parent="ProfileManager" startPc="268435460">
@@ -2178,21 +2184,25 @@
         <functionEntry accessMode="public" endPc="268449630" name="onSettingsChanged" parent="AerosenseApp" startPc="268449559">
             <documentation><![CDATA[<div class="description"> Forward settings sync to the data field so it can refresh the<br/> tap-to-coast toggle without waiting for the next tick.<br/></div>]]></documentation>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268449645" name="initialize" parent="AerosenseApp" startPc="268449631">
+        <functionEntry accessMode="public" endPc="268449686" name="getSensorConfigurationView" parent="AerosenseApp" startPc="268449631">
+            <param id="sensor"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268449706" name="procConnection" parent="AerosenseApp" startPc="268449646">
+        <functionEntry accessMode="public" endPc="268449701" name="initialize" parent="AerosenseApp" startPc="268449687">
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="public" endPc="268449762" name="procConnection" parent="AerosenseApp" startPc="268449702">
             <param id="device"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268449756" name="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;" parent="AerosenseApp" startPc="268449707">
+        <functionEntry accessMode="private" endPc="268449812" name="&lt;globals/AerosenseApp/&lt;&gt;_stopAutoScan&gt;" parent="AerosenseApp" startPc="268449763">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268449794" name="onScanResult" parent="AerosenseApp" startPc="268449757">
+        <functionEntry accessMode="public" endPc="268449850" name="onScanResult" parent="AerosenseApp" startPc="268449813">
             <param id="result"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268449867" name="onStop" parent="AerosenseApp" startPc="268449795">
+        <functionEntry accessMode="public" endPc="268449923" name="onStop" parent="AerosenseApp" startPc="268449851">
             <param id="state"/>
             <documentation/>
         </functionEntry>
