@@ -4,12 +4,15 @@ import Toybox.Lang;
 //! Aerosense BLE GATT profile.
 //! UUID base: 53f3c0bX-4f7f-4787-8af0-0c9dd053cda0
 class ProfileManager {
-    public const AEROSENSE_SERVICE        = BluetoothLowEnergy.stringToUuid("53f3c0b1-4f7f-4787-8af0-0c9dd053cda0");
-    public const TELEMETRY_CHARACTERISTIC = BluetoothLowEnergy.stringToUuid("53f3c0b2-4f7f-4787-8af0-0c9dd053cda0");
-    public const CONTROL_CHARACTERISTIC   = BluetoothLowEnergy.stringToUuid("53f3c0b3-4f7f-4787-8af0-0c9dd053cda0");
-    public const SPEED_CHARACTERISTIC     = BluetoothLowEnergy.stringToUuid("53f3c0b4-4f7f-4787-8af0-0c9dd053cda0");
-    public const POWER_CHARACTERISTIC     = BluetoothLowEnergy.stringToUuid("53f3c0b5-4f7f-4787-8af0-0c9dd053cda0");
-    public const SETTINGS_CHARACTERISTIC  = BluetoothLowEnergy.stringToUuid("53f3c0b6-4f7f-4787-8af0-0c9dd053cda0");
+    // UUID base: 53f3c0bX-4f7f-4787-8af0-0c9dd053cda0
+    // Encoded as longToUuid(high, low) matching the Garmin reference sample pattern.
+    // high = bytes 0-7 big-endian, low = bytes 8-15 big-endian.
+    public const AEROSENSE_SERVICE        = BluetoothLowEnergy.longToUuid(0x53F3C0B14F7F4787l, 0x8AF00C9DD053CDA0l);
+    public const TELEMETRY_CHARACTERISTIC = BluetoothLowEnergy.longToUuid(0x53F3C0B24F7F4787l, 0x8AF00C9DD053CDA0l);
+    public const CONTROL_CHARACTERISTIC   = BluetoothLowEnergy.longToUuid(0x53F3C0B34F7F4787l, 0x8AF00C9DD053CDA0l);
+    public const SPEED_CHARACTERISTIC     = BluetoothLowEnergy.longToUuid(0x53F3C0B44F7F4787l, 0x8AF00C9DD053CDA0l);
+    public const POWER_CHARACTERISTIC     = BluetoothLowEnergy.longToUuid(0x53F3C0B54F7F4787l, 0x8AF00C9DD053CDA0l);
+    public const SETTINGS_CHARACTERISTIC  = BluetoothLowEnergy.longToUuid(0x53F3C0B64F7F4787l, 0x8AF00C9DD053CDA0l);
 
     private const _aerosenseProfileDef = {
         :uuid => AEROSENSE_SERVICE,

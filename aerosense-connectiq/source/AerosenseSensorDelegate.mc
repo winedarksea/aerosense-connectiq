@@ -55,7 +55,7 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         }
 
         _reportedScanResult = result;
-        Sensor.notifyNewSensor(_toSensorInfo(result), true);
+        Sensor.notifyNewSensor(_toSensorInfo(result), false);
         Sensor.notifyScanComplete();
         _bleDelegate.stopScan();
         _bleDelegate.setScanListener(null);
@@ -112,10 +112,12 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         var info = new Sensor.SensorInfo();
         info.name = name;
         info.technology = Sensor.SENSOR_TECHNOLOGY_BLE;
+        info.enabled = true;
         info.type = Sensor.SENSOR_GENERIC;
         info.data = {:bleScanResult => result};
         info.partNumber = 0;
         info.manufacturerId = 0;
+        info.softwareVersion = 0;
         return info;
     }
 
@@ -195,7 +197,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     }
 
     private function _rawContainsAerosenseName(raw as ByteArray) as Boolean {
-        var prefix = Constants.DEFAULT_DEVICE_NAME;
         var i = 0;
         while (i < raw.size()) {
             var len = raw[i];
