@@ -1,4 +1,7 @@
 <settings>
+    <setting propertyKey="@Properties.mass_kg" title="@Strings.SettingMassKg">
+        <settingConfig type="numeric" min="20" max="200" />
+    </setting>
     <setting propertyKey="@Properties.tap_to_coast_enabled" title="@Strings.SettingTapEnabled">
         <settingConfig type="boolean" />
     </setting>

@@ -1,6 +1,5 @@
 import Toybox.Activity;
 import Toybox.Application;
-import Toybox.BluetoothLowEnergy;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.System;
@@ -28,16 +27,6 @@ class AerosenseField extends WatchUi.DataField {
     private const ARM_WINDOW_MS = 2500;
     private const CONFIRM_FEEDBACK_MS = 1200;
 
-    // Custom GATT link flow. Connect IQ must pair against the Aerosense BLE
-    // profile directly; the CSC advertisement is only for non-CIQ fallback.
-    private const PAIR_SCAN_MS = 10000;
-    private const PAIR_FEEDBACK_MS = 3000;
-    private const LINK_IDLE = 0;
-    private const LINK_SCANNING = 1;
-    private const LINK_PAIRING = 2;
-    private const LINK_FAILED = 3;
-    private const LINK_NO_BLE = 4;
-
     // Accent colors. All targeted Edge devices have full color.
     private const COLOR_ACCENT  = Graphics.COLOR_YELLOW;   // CdA — the marquee value
     private const COLOR_CLIMB   = Graphics.COLOR_ORANGE;   // positive grade
@@ -54,8 +43,6 @@ class AerosenseField extends WatchUi.DataField {
     private var _tapEnabled as Boolean = true;
     private var _tapState as Number = TAP_IDLE;
     private var _tapStateAtMs as Number = 0;
-    private var _linkState as Number = LINK_IDLE;
-    private var _linkStateAtMs as Number = 0;
 
     // Cached Activity.Info fields (only available in compute(), not onUpdate()).
     private var _power as Number? = null;
@@ -99,7 +86,6 @@ class AerosenseField extends WatchUi.DataField {
         }
         _maybeWriteSpeed(info);
         _decayTapState();
-        _decayLinkState();
         _maybeForwardPressureCalRequest();
         _power     = (info has :currentPower)     ? info.currentPower     : null;
         _heartRate = (info has :currentHeartRate) ? info.currentHeartRate : null;
@@ -138,7 +124,10 @@ class AerosenseField extends WatchUi.DataField {
     public function handleTap() as Boolean {
         var ble = getApp().getBleDelegate();
         if (ble == null || !ble.isConnected()) {
-            return _startPairScan(ble);
+            _tapState = TAP_NO_LINK;
+            _tapStateAtMs = System.getTimer();
+            WatchUi.requestUpdate();
+            return true;
         }
 
         if (!_tapEnabled) {
@@ -156,73 +145,6 @@ class AerosenseField extends WatchUi.DataField {
         _tapStateAtMs = now;
         WatchUi.requestUpdate();
         return true;
-    }
-
-    private function _startPairScan(ble as AerosenseBleDelegate?) as Boolean {
-        if (ble == null) {
-            _setLinkState(LINK_NO_BLE);
-            return true;
-        }
-
-        if (_linkState == LINK_SCANNING || _linkState == LINK_PAIRING) {
-            return true;
-        }
-
-        getApp().cancelAutoScan();
-        ble.setScanListener(self);
-        ble.startScan();
-        _setLinkState(LINK_SCANNING);
-        return true;
-    }
-
-    public function onScanResult(result as BluetoothLowEnergy.ScanResult) as Void {
-        if (_linkState != LINK_SCANNING) {
-            return;
-        }
-
-        var ble = getApp().getBleDelegate();
-        if (ble == null) {
-            _setLinkState(LINK_NO_BLE);
-            return;
-        }
-
-        if (ble.connectTo(result)) {
-            ble.setScanListener(null);
-            _setLinkState(LINK_PAIRING);
-        } else {
-            ble.setScanListener(null);
-            _setLinkState(LINK_FAILED);
-        }
-    }
-
-    private function _setLinkState(state as Number) as Void {
-        _linkState = state;
-        _linkStateAtMs = System.getTimer();
-        WatchUi.requestUpdate();
-    }
-
-    private function _decayLinkState() as Void {
-        if (_linkState == LINK_SCANNING) {
-            var scanDt = System.getTimer() - _linkStateAtMs;
-            if (scanDt < 0 || scanDt >= PAIR_SCAN_MS) {
-                var ble = getApp().getBleDelegate();
-                if (ble != null) {
-                    ble.stopScan();
-                    ble.setScanListener(null);
-                }
-                _setLinkState(LINK_FAILED);
-            }
-            return;
-        }
-
-        if (_linkState != LINK_FAILED && _linkState != LINK_NO_BLE) {
-            return;
-        }
-        var dt = System.getTimer() - _linkStateAtMs;
-        if (dt < 0 || dt >= PAIR_FEEDBACK_MS) {
-            _linkState = LINK_IDLE;
-            WatchUi.requestUpdate();
-        }
     }
 
     private function _fireCoastDown(now as Number) as Void {
@@ -269,12 +191,6 @@ class AerosenseField extends WatchUi.DataField {
 
         var ble = getApp().getBleDelegate();
         var connected = (ble != null) && ble.isConnected();
-        if (connected && _linkState != LINK_IDLE) {
-            if (ble != null) {
-                ble.setScanListener(null);
-            }
-            _linkState = LINK_IDLE;
-        }
         var fresh = connected && _model.isFresh(TELEMETRY_STALE_MS);
 
         var headerH = _drawHeader(dc, fg, dim, connected, fresh);
@@ -296,18 +212,6 @@ class AerosenseField extends WatchUi.DataField {
                                      headerH as Number) as Void {
         var msg = WatchUi.loadResource(Rez.Strings.NoDevice) as String;
         var hint = WatchUi.loadResource(Rez.Strings.NoDeviceHint) as String;
-
-        if (_linkState == LINK_SCANNING) {
-            msg = WatchUi.loadResource(Rez.Strings.PairScanning) as String;
-            hint = null;
-        } else if (_linkState == LINK_PAIRING) {
-            msg = WatchUi.loadResource(Rez.Strings.PairLinking) as String;
-            hint = null;
-        } else if (_linkState == LINK_FAILED) {
-            msg = WatchUi.loadResource(Rez.Strings.PairNotFound) as String;
-        } else if (_linkState == LINK_NO_BLE) {
-            msg = WatchUi.loadResource(Rez.Strings.PairNoBle) as String;
-        }
 
         _drawStatusMessage(dc, fg, dim, headerH, msg, hint);
     }

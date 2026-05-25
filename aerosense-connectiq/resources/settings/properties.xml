@@ -1,4 +1,5 @@
 <properties>
+    <property id="mass_kg" type="number">80</property>
     <property id="tap_to_coast_enabled" type="boolean">true</property>
     <property id="trigger_pressure_cal" type="boolean">false</property>
 </properties>

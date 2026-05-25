@@ -3,8 +3,7 @@ import Toybox.Lang;
 module Constants {
     module Keys {
         enum Key {
-            PAIRED_SENSOR,
-            MASS_KG
+            PAIRED_SENSOR
         }
     }
 
@@ -21,11 +20,11 @@ module Constants {
     const SETTINGS_TYPE_PRESSURE_CAL_REQUEST = 0x04;
 
     // Application.Properties keys (must match resources/settings/properties.xml).
+    const PROP_MASS_KG = "mass_kg";
     const PROP_TAP_TO_COAST_ENABLED = "tap_to_coast_enabled";
     const PROP_TRIGGER_PRESSURE_CAL = "trigger_pressure_cal";
 
-    // Defaults shown in the pairing UI.
+    // BLE advertisement defaults.
     const DEFAULT_DEVICE_NAME = "Aerosense";
     const DEFAULT_DEVICE_NAME_SHORT = "Aero";
-    const DEFAULT_MASS_KG = 80;
 }

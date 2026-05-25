@@ -3,11 +3,13 @@ import Toybox.BluetoothLowEnergy;
 import Toybox.Lang;
 import Toybox.Sensor;
 import Toybox.System;
+import Toybox.Timer;
 
 //! Native Connect IQ sensor pairing for the Aerosense custom BLE peripheral.
 //! This delegate must be self-contained: in the system pairing UI, the data
 //! field's normal onStart()/view lifecycle may not have created its BLE objects.
 class AerosenseSensorDelegate extends Sensor.SensorDelegate {
+    private const SCAN_TIMEOUT_MS = 10000;
     private const UUID_AD_TYPE_INCOMPLETE_128 = 0x06;
     private const UUID_AD_TYPE_COMPLETE_128 = 0x07;
     private const NAME_AD_TYPE_SHORT = 0x08;
@@ -16,12 +18,17 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     private var _profileManager as ProfileManager;
     private var _bleDelegate as AerosenseBleDelegate;
     private var _pendingSensor as Sensor.SensorInfo?;
-    private var _reportedScanResult as BluetoothLowEnergy.ScanResult?;
+    private var _pendingScanResult as BluetoothLowEnergy.ScanResult?;
+    private var _reportedScanResults as Array<BluetoothLowEnergy.ScanResult>;
+    private var _scanTimer as Timer.Timer?;
+    private var _scanActive as Boolean = false;
 
     public function initialize() {
         SensorDelegate.initialize();
         _profileManager = new ProfileManager();
         _bleDelegate = new AerosenseBleDelegate(_profileManager, new TelemetryModel());
+        _reportedScanResults = [];
+        _scanTimer = new Timer.Timer();
         _bleDelegate.setScanFilterEnabled(false);
         _bleDelegate.setScanListener(self);
         _bleDelegate.setConnectionListener(self);
@@ -37,9 +44,13 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
 
     public function onScan() as Boolean {
         System.println("AerosenseSensorDelegate onScan");
-        _reportedScanResult = null;
+        _reportedScanResults = [];
+        _scanActive = true;
         _bleDelegate.setScanListener(self);
         _bleDelegate.startScan();
+        if (_scanTimer != null) {
+            (_scanTimer as Timer.Timer).start(method(:finishScan), SCAN_TIMEOUT_MS, false);
+        }
         return true;
     }
 
@@ -50,15 +61,22 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         if (!_isAerosenseCandidate(result)) {
             return;
         }
-        if (_reportedScanResult != null) {
+        if (_alreadyReported(result)) {
             return;
         }
 
-        _reportedScanResult = result;
+        _reportedScanResults.add(result);
         Sensor.notifyNewSensor(_toSensorInfo(result), false);
-        Sensor.notifyScanComplete();
+    }
+
+    public function finishScan() as Void {
+        if (!_scanActive) {
+            return;
+        }
+        _scanActive = false;
         _bleDelegate.stopScan();
         _bleDelegate.setScanListener(null);
+        Sensor.notifyScanComplete();
     }
 
     public function onPair(sensor as Sensor.SensorInfo) as Boolean {
@@ -74,29 +92,40 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         }
 
         _pendingSensor = sensor;
-        return _bleDelegate.connectTo(scanResult);
+        _pendingScanResult = scanResult;
+        finishScan();
+        if (_bleDelegate.connectTo(scanResult)) {
+            return true;
+        }
+
+        _pendingSensor = null;
+        _pendingScanResult = null;
+        return false;
     }
 
     public function procConnection(device as BluetoothLowEnergy.Device) as Void {
         System.println("AerosenseSensorDelegate procConnection");
         if (_pendingSensor != null) {
             Sensor.notifyPairComplete(_pendingSensor as Sensor.SensorInfo);
+            if (_pendingScanResult != null) {
+                Storage.setValue(Constants.Keys.PAIRED_SENSOR,
+                    _pendingScanResult as BluetoothLowEnergy.ScanResult);
+            }
             _pendingSensor = null;
+            _pendingScanResult = null;
         }
     }
 
     public function onUnpair(sensor as Sensor.SensorInfo) as Boolean {
         System.println("AerosenseSensorDelegate onUnpair");
         var data = sensor.data;
-        if (data == null) {
-            return false;
-        }
-
-        var scanResult = data[:bleScanResult] as BluetoothLowEnergy.ScanResult?;
+        var scanResult = (data == null) ? null : data[:bleScanResult] as BluetoothLowEnergy.ScanResult?;
         var paired = Storage.getValue(Constants.Keys.PAIRED_SENSOR) as BluetoothLowEnergy.ScanResult?;
-        if (scanResult != null && paired != null && paired.isSameDevice(scanResult)) {
+        if (scanResult == null || paired == null || paired.isSameDevice(scanResult)) {
             Storage.deleteValue(Constants.Keys.PAIRED_SENSOR);
             Sensor.notifyUnpairComplete(sensor);
+            _pendingSensor = null;
+            _pendingScanResult = null;
             return true;
         }
 
@@ -119,6 +148,15 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         info.manufacturerId = 0;
         info.softwareVersion = 0;
         return info;
+    }
+
+    private function _alreadyReported(result as BluetoothLowEnergy.ScanResult) as Boolean {
+        for (var i = 0; i < _reportedScanResults.size(); i += 1) {
+            if ((_reportedScanResults[i] as BluetoothLowEnergy.ScanResult).isSameDevice(result)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function _isAerosenseCandidate(result as BluetoothLowEnergy.ScanResult) as Boolean {

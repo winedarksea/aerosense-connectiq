@@ -10,7 +10,7 @@ class AerosenseApp extends Application.AppBase {
     private var _bleDelegate as AerosenseBleDelegate?;
     private var _model as TelemetryModel?;
     private var _field as WeakReference?;
-    private var _autoScanActive as Boolean = false;
+    private var _foregroundConnectStarted as Boolean = false;
 
     public function initialize() {
         AppBase.initialize();
@@ -20,58 +20,23 @@ class AerosenseApp extends Application.AppBase {
         _model = new TelemetryModel();
         _profileManager = new ProfileManager();
         _bleDelegate = new AerosenseBleDelegate(_profileManager, _model);
+    }
 
+    private function _startForegroundConnection() as Void {
+        if (_bleDelegate == null || _foregroundConnectStarted) {
+            return;
+        }
+        _foregroundConnectStarted = true;
         BluetoothLowEnergy.setDelegate(_bleDelegate);
         _bleDelegate.setConnectionListener(self);
         _profileManager.registerProfiles();
-
-        // If we've paired before, reconnect from the stored ScanResult. Legacy
-        // builds stored only a boolean, so keep a scan fallback for those.
         var paired = Storage.getValue(Constants.Keys.PAIRED_SENSOR);
         if (paired instanceof BluetoothLowEnergy.ScanResult) {
             _bleDelegate.connectTo(paired as BluetoothLowEnergy.ScanResult);
-        } else {
-            _startAutoScan();
-        }
-    }
-
-    private function _startAutoScan() as Void {
-        if (_bleDelegate == null || _autoScanActive) {
-            return;
-        }
-        _autoScanActive = true;
-        (_bleDelegate as AerosenseBleDelegate).setScanListener(self);
-        (_bleDelegate as AerosenseBleDelegate).startScan();
-    }
-
-    //! Called by AerosenseField when it takes over the scan listener so the
-    //! auto-scan timer doesn't fire later and cancel the manual scan.
-    public function cancelAutoScan() as Void {
-        if (!_autoScanActive) {
-            return;
-        }
-        _autoScanActive = false;
-        // Do NOT stop the BLE scan here — the field is now managing it.
-    }
-
-    private function _stopAutoScan() as Void {
-        _autoScanActive = false;
-        if (_bleDelegate != null) {
-            var ble = _bleDelegate as AerosenseBleDelegate;
-            ble.setScanListener(null);
-            ble.stopScan();
-        }
-    }
-
-    public function onScanResult(result as BluetoothLowEnergy.ScanResult) as Void {
-        _stopAutoScan();
-        if (_bleDelegate != null) {
-            (_bleDelegate as AerosenseBleDelegate).connectTo(result);
         }
     }
 
     public function onStop(state as Dictionary?) as Void {
-        _stopAutoScan();
         if (_bleDelegate != null) {
             _bleDelegate.setScanListener(null);
             _bleDelegate.stopScan();
@@ -94,14 +59,16 @@ class AerosenseApp extends Application.AppBase {
     }
 
     public function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
+        _startForegroundConnection();
         var field = new AerosenseField(_model);
         _field = field.weak();
         return [field];
     }
 
-    //! Forward settings sync to the data field so it can refresh the
-    //! tap-to-coast toggle without waiting for the next tick.
+    //! Forward settings sync to the data field and push app settings over BLE
+    //! when connected.
     public function onSettingsChanged() as Void {
+        _syncMassSetting();
         if (_field != null && _field.stillAlive()) {
             var f = _field.get();
             if (f != null && (f has :onSettingsChanged)) {
@@ -111,11 +78,15 @@ class AerosenseApp extends Application.AppBase {
     }
 
     public function procConnection(device as BluetoothLowEnergy.Device) as Void {
-        _stopAutoScan();
-        var mass = Storage.getValue(Constants.Keys.MASS_KG);
-        if (mass != null && _bleDelegate != null) {
-            (_bleDelegate as AerosenseBleDelegate).queueMassKg(mass as Number);
+        _syncMassSetting();
+    }
+
+    private function _syncMassSetting() as Void {
+        if (_bleDelegate == null) {
+            return;
         }
+        var mass = Application.Properties.getValue(Constants.PROP_MASS_KG);
+        (_bleDelegate as AerosenseBleDelegate).queueMassKg(mass as Number);
     }
 
     //! Native Connect IQ sensor-pairing entry point. This is separate from the
@@ -125,11 +96,6 @@ class AerosenseApp extends Application.AppBase {
         return new AerosenseSensorDelegate();
     }
 
-    public function getSensorConfigurationView(sensor as Sensor.SensorInfo)
-            as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
-        var view = new SensorConfigurationView();
-        return [view, new SensorConfigurationDelegate(view)];
-    }
 }
 
 function getApp() as AerosenseApp {
