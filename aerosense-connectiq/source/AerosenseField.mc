@@ -1,5 +1,6 @@
 import Toybox.Activity;
 import Toybox.Application;
+import Toybox.Application.Storage;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.System;
@@ -41,6 +42,7 @@ class AerosenseField extends WatchUi.DataField {
     public function initialize(model as TelemetryModel) {
         DataField.initialize();
         _model = model;
+        Storage.setValue(Constants.Keys.FIELD_VIEWED, true);
         try {
             _fit = new AerosenseFitContributor(self);
         } catch (e) {

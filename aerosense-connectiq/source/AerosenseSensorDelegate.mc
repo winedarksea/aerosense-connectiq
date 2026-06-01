@@ -43,10 +43,16 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
 
     public function pairingRequired() as Boolean {
         System.println("AerosenseSensorDelegate pairingRequired");
-        // Reflect actual pairing state: true until paired, false once a pairing
-        // is stored. Returning false once paired is what lets the data field
-        // leave the "Pair Aerosense" setup state and start rendering data.
-        // onUnpair() clears the stored value, flipping this back to true.
+        // Defer the pairing prompt until the field has been placed on a data
+        // screen at least once. On first install the system calls this before
+        // the user has added the field to any screen, which causes the pairing
+        // UI to appear without listing our sensor. Returning false here causes
+        // the system to skip the prompt; once the field is viewed (flag set in
+        // AerosenseField.initialize) the next check will return true and the
+        // pairing UI will find the sensor correctly.
+        if (!(Storage.getValue(Constants.Keys.FIELD_VIEWED) as Boolean?)) {
+            return false;
+        }
         return !_hasStoredPairing();
     }
 

@@ -3,7 +3,8 @@ import Toybox.Lang;
 module Constants {
     module Keys {
         enum Key {
-            PAIRED_SENSOR
+            PAIRED_SENSOR,
+            FIELD_VIEWED
         }
     }
 
