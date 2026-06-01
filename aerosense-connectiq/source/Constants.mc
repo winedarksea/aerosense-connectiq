@@ -22,7 +22,9 @@ module Constants {
     const PROP_MASS_KG = "mass_kg";
     const PROP_TRIGGER_PRESSURE_CAL = "trigger_pressure_cal";
 
-    // BLE advertisement defaults.
-    const DEFAULT_DEVICE_NAME = "Aerosense";
-    const DEFAULT_DEVICE_NAME_SHORT = "Aero";
+    // BLE advertisement defaults. Firmware advertises the custom-service
+    // identity as "Aero Custom XXXX" (XXXX = last two bytes of the BLE
+    // address). The "Aero CSC XXXX" identity is consumed by Garmin's native
+    // cycling cadence support and intentionally not matched here.
+    const DEFAULT_DEVICE_NAME = "Aero Custom";
 }
