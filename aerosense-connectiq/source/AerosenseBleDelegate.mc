@@ -23,6 +23,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     private var _scanFilterEnabled as Boolean = true;
     private var _settingsQueue as Array<ByteArray> = [];
     private var _settingsWriteInFlight as Boolean = false;
+    private var _cccdWriteInFlight as Boolean = false;
 
     public function initialize(profileManager as ProfileManager, model as TelemetryModel) {
         BleDelegate.initialize();
@@ -160,7 +161,14 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         }
         var cccd = _telemetryChar.getDescriptor(BluetoothLowEnergy.cccdUuid());
         if (cccd != null) {
-            cccd.requestWrite([0x01, 0x00]b);
+            try {
+                cccd.requestWrite([0x01, 0x00]b);
+                // A GATT op is now outstanding; hold off any settings writes until
+                // onDescriptorWrite fires, since CIQ allows only one op at a time.
+                _cccdWriteInFlight = true;
+            } catch (e) {
+                System.println("Aerosense CCCD write failed: " + e.getErrorMessage());
+            }
         }
     }
 
@@ -172,6 +180,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         _settingsChar = null;
         _pendingPairResult = null;
         _settingsWriteInFlight = false;
+        _cccdWriteInFlight = false;
         _settingsQueue = [];
     }
 
@@ -216,10 +225,10 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
 
     public function onDescriptorWrite(descriptor as BluetoothLowEnergy.Descriptor,
                                       status as BluetoothLowEnergy.Status) as Void {
-        if (status != BluetoothLowEnergy.STATUS_SUCCESS) {
-            return;
-        }
         if (BluetoothLowEnergy.cccdUuid().equals(descriptor.getUuid())) {
+            // Clear the gate regardless of status so a failed CCCD write can't
+            // wedge the settings queue forever; settings sync is independent.
+            _cccdWriteInFlight = false;
             _flushPendingSettings();
         }
     }
@@ -274,14 +283,23 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     }
 
     private function _flushPendingSettings() as Void {
-        if (_settingsChar == null || _settingsWriteInFlight || _settingsQueue.size() == 0) {
+        // Wait until the CCCD write completes: only one GATT op may be in flight.
+        if (_settingsChar == null || _settingsWriteInFlight || _cccdWriteInFlight ||
+                _settingsQueue.size() == 0) {
             return;
         }
         var tlv = _settingsQueue[0] as ByteArray;
         _settingsQueue.remove(tlv);
-        _settingsWriteInFlight = true;
-        _settingsChar.requestWrite(tlv,
-            {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
+        try {
+            _settingsChar.requestWrite(tlv,
+                {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
+            _settingsWriteInFlight = true;
+        } catch (e) {
+            // Drop this TLV rather than crash or spin; a missed settings write is
+            // non-fatal and the connection stays up.
+            System.println("Aerosense settings write failed: " + e.getErrorMessage());
+            _settingsWriteInFlight = false;
+        }
     }
 
     private function _buildMassTlv(kg as Number) as ByteArray {

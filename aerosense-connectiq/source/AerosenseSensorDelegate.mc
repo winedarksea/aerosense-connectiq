@@ -3,14 +3,17 @@ import Toybox.BluetoothLowEnergy;
 import Toybox.Lang;
 import Toybox.Sensor;
 import Toybox.System;
-import Toybox.Timer;
 
 //! Native Connect IQ sensor pairing for the Aerosense custom BLE peripheral.
 //! This delegate must be self-contained: in the system pairing UI, the data
 //! field's normal onStart()/view lifecycle may not have created its BLE objects.
+//!
+//! IMPORTANT: Data Fields cannot import Toybox.Timer (Connect IQ permission
+//! restriction — throws "Module 'Toybox.Timer' not available to 'Data Field'"
+//! at runtime even though the simulator allows it). Scan and pair timeouts are
+//! therefore driven entirely by the head unit's pairing UI, which provides its
+//! own countdown and cancel affordance. Do not reintroduce Timer use here.
 class AerosenseSensorDelegate extends Sensor.SensorDelegate {
-    private const SCAN_TIMEOUT_MS = 10000;
-    private const PAIR_TIMEOUT_MS = 15000;
     private const UUID_AD_TYPE_INCOMPLETE_128 = 0x06;
     private const UUID_AD_TYPE_COMPLETE_128 = 0x07;
     private const NAME_AD_TYPE_SHORT = 0x08;
@@ -21,8 +24,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     private var _pendingSensor as Sensor.SensorInfo?;
     private var _pendingScanResult as BluetoothLowEnergy.ScanResult?;
     private var _reportedScanResults as Array<BluetoothLowEnergy.ScanResult>;
-    private var _scanTimer as Timer.Timer?;
-    private var _pairTimer as Timer.Timer?;
     private var _scanActive as Boolean = false;
     private var _pairingActive as Boolean = false;
     private var _profileReady as Boolean = false;
@@ -32,8 +33,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         _profileManager = new ProfileManager();
         _bleDelegate = new AerosenseBleDelegate(_profileManager, new TelemetryModel());
         _reportedScanResults = [];
-        _scanTimer = new Timer.Timer();
-        _pairTimer = new Timer.Timer();
         _bleDelegate.setScanFilterEnabled(false);
         _bleDelegate.setScanListener(self);
         _bleDelegate.setConnectionListener(self);
@@ -44,6 +43,10 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
 
     public function pairingRequired() as Boolean {
         System.println("AerosenseSensorDelegate pairingRequired");
+        // Reflect actual pairing state: true until paired, false once a pairing
+        // is stored. Returning false once paired is what lets the data field
+        // leave the "Pair Aerosense" setup state and start rendering data.
+        // onUnpair() clears the stored value, flipping this back to true.
         return !_hasStoredPairing();
     }
 
@@ -53,35 +56,48 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
             Sensor.notifyError("Aerosense BLE profile registration failed");
             return false;
         }
-        if (_hasStoredPairing()) {
+        // Intentionally do NOT bail out when a pairing is already stored: the
+        // user may be re-pairing, and a stale stored value must never block a
+        // fresh scan (see pairingRequired()).
+
+        try {
+            BluetoothLowEnergy.setDelegate(_bleDelegate);
+            _reportedScanResults = [];
+            _scanActive = true;
+            _bleDelegate.setScanListener(self);
+            _bleDelegate.setConnectionListener(self);
+            _bleDelegate.startScan();
+        } catch (e) {
+            _scanActive = false;
+            System.println("AerosenseSensorDelegate onScan failed: " + e.getErrorMessage());
+            Sensor.notifyError("Aerosense BLE scan failed");
             return false;
         }
-
-        BluetoothLowEnergy.setDelegate(_bleDelegate);
-        _reportedScanResults = [];
-        _scanActive = true;
-        _bleDelegate.setScanListener(self);
-        _bleDelegate.setConnectionListener(self);
-        _bleDelegate.startScan();
-        if (_scanTimer != null) {
-            (_scanTimer as Timer.Timer).start(method(:finishScan), SCAN_TIMEOUT_MS, false);
-        }
+        // No scan-timeout timer: see class header — Toybox.Timer is unavailable
+        // to Data Fields. The system pairing UI cancels the scan itself.
         return true;
     }
 
     public function onScanResult(result as BluetoothLowEnergy.ScanResult) as Void {
-        var name = result.getDeviceName();
-        System.println("AerosenseSensorDelegate onScanResult " +
-            ((name == null) ? "<unnamed>" : name));
-        if (!_isAerosenseCandidate(result)) {
-            return;
-        }
-        if (_alreadyReported(result)) {
-            return;
-        }
+        // Guard the whole body: a single malformed advertisement must never
+        // throw out of this system callback and abort the pairing scan.
+        try {
+            var name = result.getDeviceName();
+            System.println("AerosenseSensorDelegate onScanResult " +
+                ((name == null) ? "<unnamed>" : name));
+            if (!_isAerosenseCandidate(result)) {
+                return;
+            }
+            if (_alreadyReported(result)) {
+                return;
+            }
 
-        _reportedScanResults.add(result);
-        Sensor.notifyNewSensor(_toSensorInfo(result), false);
+            _reportedScanResults.add(result);
+            Sensor.notifyNewSensor(_toSensorInfo(result), false);
+        } catch (e) {
+            System.println("AerosenseSensorDelegate onScanResult error: " +
+                e.getErrorMessage());
+        }
     }
 
     public function finishScan() as Void {
@@ -91,9 +107,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         _scanActive = false;
         _bleDelegate.stopScan();
         _bleDelegate.setScanListener(null);
-        if (_scanTimer != null) {
-            (_scanTimer as Timer.Timer).stop();
-        }
         Sensor.notifyScanComplete();
     }
 
@@ -122,10 +135,9 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         _bleDelegate.setConnectionListener(self);
         finishScan();
         if (_bleDelegate.connectTo(scanResult)) {
-            if (_pairTimer != null) {
-                (_pairTimer as Timer.Timer).start(method(:pairTimeout), PAIR_TIMEOUT_MS,
-                    false);
-            }
+            // No pair-timeout timer: see class header. The system pairing UI
+            // shows its own timeout and a user-cancel path; failure surfaces
+            // via procConnectionFailed.
             return true;
         }
 
@@ -136,9 +148,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     public function procConnection(device as BluetoothLowEnergy.Device) as Void {
         System.println("AerosenseSensorDelegate procConnection");
         if (_pairingActive && _pendingSensor != null) {
-            if (_pairTimer != null) {
-                (_pairTimer as Timer.Timer).stop();
-            }
             Sensor.notifyPairComplete(_pendingSensor as Sensor.SensorInfo);
             if (_pendingScanResult != null) {
                 Storage.setValue(Constants.Keys.PAIRED_SENSOR,
@@ -154,15 +163,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         System.println("AerosenseSensorDelegate procConnectionFailed " + reason);
         if (_pairingActive) {
             _failPairing(reason);
-        }
-    }
-
-    public function pairTimeout() as Void {
-        if (_pairingActive) {
-            _bleDelegate.setConnectionListener(null);
-            _bleDelegate.disconnect();
-            _bleDelegate.setConnectionListener(self);
-            _failPairing("Aerosense BLE pairing timed out");
         }
     }
 
@@ -185,12 +185,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     }
 
     public function shutdown() as Void {
-        if (_scanTimer != null) {
-            (_scanTimer as Timer.Timer).stop();
-        }
-        if (_pairTimer != null) {
-            (_pairTimer as Timer.Timer).stop();
-        }
         _scanActive = false;
         _pairingActive = false;
         _bleDelegate.setScanListener(null);
@@ -231,9 +225,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     }
 
     private function _failPairing(reason as String) as Void {
-        if (_pairTimer != null) {
-            (_pairTimer as Timer.Timer).stop();
-        }
         _pendingSensor = null;
         _pendingScanResult = null;
         _pairingActive = false;
@@ -336,18 +327,23 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
 
     private function _rawNameStartsWithAerosense(raw as ByteArray, start as Number,
                                                 end as Number) as Boolean {
-        if ((end - start + 1) < 9) {
+        // Matches the firmware's custom-service identity name "Aero Custom"
+        // (11 bytes). The "Aero CSC" identity is reserved for Garmin's native
+        // CSC consumer and intentionally not matched.
+        if ((end - start + 1) < 11) {
             return false;
         }
 
-        return raw[start] == 0x41 &&
-               raw[start + 1] == 0x65 &&
-               raw[start + 2] == 0x72 &&
-               raw[start + 3] == 0x6f &&
-               raw[start + 4] == 0x73 &&
-               raw[start + 5] == 0x65 &&
-               raw[start + 6] == 0x6e &&
-               raw[start + 7] == 0x73 &&
-               raw[start + 8] == 0x65;
+        return raw[start]      == 0x41 &&
+               raw[start + 1]  == 0x65 &&
+               raw[start + 2]  == 0x72 &&
+               raw[start + 3]  == 0x6f &&
+               raw[start + 4]  == 0x20 &&
+               raw[start + 5]  == 0x43 &&
+               raw[start + 6]  == 0x75 &&
+               raw[start + 7]  == 0x73 &&
+               raw[start + 8]  == 0x74 &&
+               raw[start + 9]  == 0x6f &&
+               raw[start + 10] == 0x6d;
     }
 }
