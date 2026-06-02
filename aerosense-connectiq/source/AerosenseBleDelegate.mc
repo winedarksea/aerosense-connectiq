@@ -122,10 +122,12 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     public function onConnectedStateChanged(device as BluetoothLowEnergy.Device,
                                             state as BluetoothLowEnergy.ConnectionState) as Void {
         if (state == BluetoothLowEnergy.CONNECTION_STATE_CONNECTED) {
+            if (_device != null) {
+                return;
+            }
             _device = device;
             _service = device.getService(_profileManager.AEROSENSE_SERVICE);
             if (_service == null) {
-                BluetoothLowEnergy.unpairDevice(device);
                 _resetConnection();
                 _notifyConnectionFailed("Aerosense service not found");
                 WatchUi.requestUpdate();
@@ -135,8 +137,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             _telemetryChar = _service.getCharacteristic(_profileManager.TELEMETRY_CHARACTERISTIC);
             _speedChar = _service.getCharacteristic(_profileManager.SPEED_CHARACTERISTIC);
             _settingsChar = _service.getCharacteristic(_profileManager.SETTINGS_CHARACTERISTIC);
-            if (_telemetryChar == null || _settingsChar == null) {
-                BluetoothLowEnergy.unpairDevice(device);
+            if (_telemetryChar == null || _speedChar == null || _settingsChar == null) {
                 _resetConnection();
                 _notifyConnectionFailed("Aerosense characteristics not found");
                 WatchUi.requestUpdate();

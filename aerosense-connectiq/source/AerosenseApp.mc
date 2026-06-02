@@ -33,6 +33,7 @@ class AerosenseApp extends Application.AppBase {
         BluetoothLowEnergy.setDelegate(bleDelegate);
         bleDelegate.setConnectionListener(self);
         if (!profileManager.registerProfiles()) {
+            _foregroundConnectStarted = false;
             return;
         }
         var paired = Storage.getValue(Constants.Keys.PAIRED_SENSOR);
@@ -89,6 +90,13 @@ class AerosenseApp extends Application.AppBase {
 
     public function procConnection(device as BluetoothLowEnergy.Device) as Void {
         _syncMassSetting();
+    }
+
+    public function procConnectionFailed(reason as String) as Void {
+        // Clear the start flag so a field reopen or watch restart can retry.
+        // The Garmin OS auto-reconnects while pairDevice() is active (i.e. until
+        // unpairDevice() is called), so no explicit retry call is needed here.
+        _foregroundConnectStarted = false;
     }
 
     private function _syncMassSetting() as Void {
