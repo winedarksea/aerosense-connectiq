@@ -96,7 +96,16 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         try {
             device = BluetoothLowEnergy.pairDevice(scanResult);
         } catch (e) {
-            System.println("Aerosense BLE pairDevice failed: " + e.getErrorMessage());
+            var msg = e.getErrorMessage();
+            System.println("Aerosense BLE pairDevice: " + msg);
+            if (msg != null && msg.equals("pairingRequired")) {
+                // pairDevice() throws this when the device requests BLE bonding
+                // and the OS has not yet bonded it at the system level, OR when
+                // the device is registered as a system sensor.  Either way the
+                // OS will manage the connection; wait for onConnectedStateChanged.
+                _pendingPairResult = scanResult;
+                return true;
+            }
             _notifyConnectionFailed("Pairing failed");
             return false;
         }
