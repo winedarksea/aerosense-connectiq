@@ -36,7 +36,7 @@ class AerosenseApp extends Application.AppBase {
             _foregroundConnectStarted = false;
             return;
         }
-        var paired = Storage.getValue(Constants.Keys.PAIRED_SENSOR);
+        var paired = _readStoredPairing();
         if (paired instanceof BluetoothLowEnergy.ScanResult) {
             bleDelegate.connectTo(paired as BluetoothLowEnergy.ScanResult);
         }
@@ -97,6 +97,16 @@ class AerosenseApp extends Application.AppBase {
         // The Garmin OS auto-reconnects while pairDevice() is active (i.e. until
         // unpairDevice() is called), so no explicit retry call is needed here.
         _foregroundConnectStarted = false;
+    }
+
+    private function _readStoredPairing() as Object? {
+        try {
+            return Storage.getValue(Constants.Keys.PAIRED_SENSOR);
+        } catch (e) {
+            System.println("Aerosense stored pairing read failed: " +
+                e.getErrorMessage());
+            return null;
+        }
     }
 
     private function _syncMassSetting() as Void {
