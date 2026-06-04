@@ -23,6 +23,12 @@ module Constants {
     const PROP_MASS_KG = "mass_kg";
     const PROP_TRIGGER_PRESSURE_CAL = "trigger_pressure_cal";
 
+    // Native sensor metadata. Garmin's SensorInfo supports these fields for
+    // stable sensor identification in the system sensor list.
+    const SENSOR_MANUFACTURER_ID = 0xAE70;
+    const SENSOR_DEFAULT_PART_NUMBER = 0xAE00;
+    const SENSOR_SOFTWARE_VERSION = 1;
+
     // BLE advertisement defaults. Firmware advertises the custom-service
     // identity as "Aero Custom XXXX" (XXXX = last two bytes of the BLE
     // address). The "Aero CSC XXXX" identity is consumed by Garmin's native

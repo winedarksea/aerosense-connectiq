@@ -221,10 +221,52 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         info.enabled = true;
         info.type = Sensor.SENSOR_GENERIC;
         info.data = {:bleScanResult => result};
-        info.partNumber = 0;
-        info.manufacturerId = 0;
-        info.softwareVersion = 0;
+        info.partNumber = _partNumberFromName(name);
+        info.manufacturerId = Constants.SENSOR_MANUFACTURER_ID;
+        info.softwareVersion = Constants.SENSOR_SOFTWARE_VERSION;
         return info;
+    }
+
+    private function _partNumberFromName(name as String) as Number {
+        var prefixLen = Constants.DEFAULT_DEVICE_NAME.length();
+        if (name.length() <= prefixLen + 1) {
+            return Constants.SENSOR_DEFAULT_PART_NUMBER;
+        }
+
+        var suffix = name.substring(prefixLen + 1, name.length());
+        if (suffix.length() != 4) {
+            return Constants.SENSOR_DEFAULT_PART_NUMBER;
+        }
+
+        var value = 0;
+        for (var i = 0; i < suffix.length(); i += 1) {
+            var nibble = _hexNibble(suffix.substring(i, i + 1));
+            if (nibble < 0) {
+                return Constants.SENSOR_DEFAULT_PART_NUMBER;
+            }
+            value = (value * 16) + nibble;
+        }
+        return value;
+    }
+
+    private function _hexNibble(ch as String) as Number {
+        if (ch.equals("0")) { return 0; }
+        if (ch.equals("1")) { return 1; }
+        if (ch.equals("2")) { return 2; }
+        if (ch.equals("3")) { return 3; }
+        if (ch.equals("4")) { return 4; }
+        if (ch.equals("5")) { return 5; }
+        if (ch.equals("6")) { return 6; }
+        if (ch.equals("7")) { return 7; }
+        if (ch.equals("8")) { return 8; }
+        if (ch.equals("9")) { return 9; }
+        if (ch.equals("A") || ch.equals("a")) { return 10; }
+        if (ch.equals("B") || ch.equals("b")) { return 11; }
+        if (ch.equals("C") || ch.equals("c")) { return 12; }
+        if (ch.equals("D") || ch.equals("d")) { return 13; }
+        if (ch.equals("E") || ch.equals("e")) { return 14; }
+        if (ch.equals("F") || ch.equals("f")) { return 15; }
+        return -1;
     }
 
     private function _alreadyReported(result as BluetoothLowEnergy.ScanResult) as Boolean {
