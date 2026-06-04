@@ -32,6 +32,7 @@ class AerosenseApp extends Application.AppBase {
         var profileManager = _profileManager as ProfileManager;
         BluetoothLowEnergy.setDelegate(bleDelegate);
         bleDelegate.setConnectionListener(self);
+        bleDelegate.setScanListener(self);
         if (!profileManager.registerProfiles()) {
             _foregroundConnectStarted = false;
             return;
@@ -39,6 +40,8 @@ class AerosenseApp extends Application.AppBase {
         var paired = _readStoredPairing();
         if (paired instanceof BluetoothLowEnergy.ScanResult) {
             bleDelegate.connectTo(paired as BluetoothLowEnergy.ScanResult);
+        } else {
+            bleDelegate.startScan();
         }
     }
 
@@ -93,10 +96,30 @@ class AerosenseApp extends Application.AppBase {
     }
 
     public function procConnectionFailed(reason as String) as Void {
-        // Clear the start flag so a field reopen or watch restart can retry.
-        // The Garmin OS auto-reconnects while pairDevice() is active (i.e. until
-        // unpairDevice() is called), so no explicit retry call is needed here.
         _foregroundConnectStarted = false;
+        // Trigger a scan so we catch the device re-advertising and reconnect
+        // without requiring a screen navigation cycle.
+        if (_bleDelegate != null) {
+            var d = _bleDelegate as AerosenseBleDelegate;
+            d.setScanListener(self);
+            d.startScan();
+        }
+    }
+
+    public function onScanResult(result as BluetoothLowEnergy.ScanResult) as Void {
+        if (_bleDelegate == null) {
+            return;
+        }
+        var d = _bleDelegate as AerosenseBleDelegate;
+        if (d.isConnected()) {
+            d.stopScan();
+            return;
+        }
+        var paired = _readStoredPairing();
+        if (paired instanceof BluetoothLowEnergy.ScanResult &&
+            result.isSameDevice(paired as BluetoothLowEnergy.ScanResult)) {
+            d.connectTo(result);  // connectTo() stops the scan internally
+        }
     }
 
     private function _readStoredPairing() as Object? {

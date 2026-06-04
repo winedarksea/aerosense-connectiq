@@ -28,8 +28,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
     private var _profileManager as ProfileManager;
     private var _bleDelegate as AerosenseBleDelegate;
     private var _reportedScanResults as Array<BluetoothLowEnergy.ScanResult>;
-    private var _pendingSensor as Sensor.SensorInfo?;
-    private var _pendingScanResult as BluetoothLowEnergy.ScanResult?;
     private var _scanActive as Boolean = false;
     private var _profileReady as Boolean = false;
 
@@ -141,48 +139,32 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
             return false;
         }
         finishScan();
+        // Do NOT call pairDevice() here. The data field exclusively owns the
+        // live BLE connection. Opening a connection from the sensor-menu pairing
+        // flow creates a phantom session that prevents onConnectedStateChanged
+        // from firing on the data field's delegate, keeping the field in
+        // "Searching..." permanently.
         try {
-            if (BluetoothLowEnergy.pairDevice(scanResult) != null) {
-                _pendingSensor = sensor;
-                _pendingScanResult = scanResult;
-                return true;
-            }
+            Storage.setValue(Constants.Keys.PAIRED_SENSOR, scanResult);
+            Sensor.notifyPairComplete(sensor);
+            return true;
         } catch (e) {
-            System.println("AerosenseSensorDelegate pairDevice failed: " +
+            System.println("AerosenseSensorDelegate onPair failed: " +
                 e.getErrorMessage());
         }
-
-        _pendingSensor = null;
-        _pendingScanResult = null;
         Sensor.notifyError("Aerosense BLE pair failed");
         return false;
     }
 
     public function procConnection(device as BluetoothLowEnergy.Device) as Void {
-        if (_pendingSensor == null || _pendingScanResult == null) {
-            return;
-        }
-
-        try {
-            Storage.setValue(Constants.Keys.PAIRED_SENSOR,
-                _pendingScanResult as BluetoothLowEnergy.ScanResult);
-            Sensor.notifyPairComplete(_pendingSensor as Sensor.SensorInfo);
-        } catch (e) {
-            System.println("AerosenseSensorDelegate pair completion failed: " +
-                e.getErrorMessage());
-            Sensor.notifyError("Aerosense BLE pair failed");
-        }
-        _pendingSensor = null;
-        _pendingScanResult = null;
+        // Pairing is completed synchronously in onPair() above.
+        // This callback fires only if onPair() had started a connection,
+        // which it no longer does — so this is intentionally a no-op.
     }
 
     public function procConnectionFailed(reason as String) as Void {
-        if (_pendingSensor != null) {
-            System.println("AerosenseSensorDelegate pair connection failed: " + reason);
-            Sensor.notifyError("Aerosense BLE pair failed");
-        }
-        _pendingSensor = null;
-        _pendingScanResult = null;
+        System.println("AerosenseSensorDelegate connection failed: " + reason);
+        // No notifyError() — pairing was already confirmed in onPair().
     }
 
     public function onUnpair(sensor as Sensor.SensorInfo) as Boolean {
@@ -193,8 +175,6 @@ class AerosenseSensorDelegate extends Sensor.SensorDelegate {
         if (scanResult == null || paired == null || paired.isSameDevice(scanResult)) {
             _bleDelegate.disconnect();
             Storage.deleteValue(Constants.Keys.PAIRED_SENSOR);
-            _pendingSensor = null;
-            _pendingScanResult = null;
             Sensor.notifyUnpairComplete(sensor);
             return true;
         }
