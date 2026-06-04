@@ -1,4 +1,5 @@
 <properties>
     <property id="mass_kg" type="number">80</property>
     <property id="trigger_pressure_cal" type="boolean">false</property>
+    <property id="debug_hud" type="boolean">true</property>
 </properties>

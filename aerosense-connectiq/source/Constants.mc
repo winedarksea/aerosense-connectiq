@@ -22,6 +22,9 @@ module Constants {
     // Application.Properties keys (must match resources/settings/properties.xml).
     const PROP_MASS_KG = "mass_kg";
     const PROP_TRIGGER_PRESSURE_CAL = "trigger_pressure_cal";
+    // Diagnostic on-screen HUD; ships off. Reveals BLE subscription/notify
+    // internals on hardware where System.println is not accessible.
+    const PROP_DEBUG_HUD = "debug_hud";
 
     // Native sensor metadata. Garmin's SensorInfo supports these fields for
     // stable sensor identification in the system sensor list.

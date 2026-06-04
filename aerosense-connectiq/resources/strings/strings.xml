@@ -16,4 +16,5 @@
     <string id="SettingMassKg">Total mass (kg)</string>
     <string id="SettingTriggerPressureCal">Trigger pressure calibration</string>
     <string id="SettingTriggerPressureCalHint">Turn on while stationary to ask the device to recalibrate static pressure. Auto-clears once accepted.</string>
+    <string id="SettingDebugHud">Show BLE debug overlay</string>
 </strings>

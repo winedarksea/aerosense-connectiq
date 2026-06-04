@@ -130,15 +130,45 @@ class AerosenseField extends WatchUi.DataField {
 
         if (!connected) {
             _drawLinkStatus(dc, fg, dim, headerH);
-            return;
-        }
-        if (!fresh) {
+        } else if (!fresh) {
             _drawStatusMessage(dc, fg, dim, headerH,
                 WatchUi.loadResource(Rez.Strings.Searching) as String, null);
-            return;
+        } else {
+            _drawGrid(dc, fg, dim, headerH);
         }
 
-        _drawGrid(dc, fg, dim, headerH);
+        _maybeDrawDebugHud(dc, ble);
+    }
+
+    //! Temporary diagnostic overlay (gated by the debug_hud app property).
+    //! On hardware System.println is not accessible, so this surfaces the BLE
+    //! subscription/notify internals directly on screen. Reads, left to right:
+    //!   C   connected (telemetry characteristic discovered)
+    //!   cd  CCCD descriptor found on the telemetry characteristic
+    //!   dw  last CCCD descriptor-write status (BluetoothLowEnergy.Status, 0=ok)
+    //!   nf  count of telemetry notifications received (climbs => notifies flow)
+    //!   ok  last notification parsed successfully
+    //!   ln  byte length of the last notification payload
+    private function _maybeDrawDebugHud(dc as Graphics.Dc,
+                                        ble as AerosenseBleDelegate?) as Void {
+        var on = Application.Properties.getValue(Constants.PROP_DEBUG_HUD);
+        if (on == null || !(on as Boolean) || ble == null) {
+            return;
+        }
+        var d = ble as AerosenseBleDelegate;
+        var dw = d.dbgLastDescWriteStatus();
+        var line = "C:" + (d.isConnected() ? "1" : "0") +
+            " cd:" + (d.dbgCccdFound() ? "1" : "0") +
+            " dw:" + ((dw == null) ? "-" : dw.toString()) +
+            " nf:" + d.dbgNotifyCount().toString() +
+            " ok:" + (d.dbgLastParseOk() ? "1" : "0") +
+            " ln:" + d.dbgLastValueLen().toString();
+        var font = Graphics.FONT_XTINY;
+        var h = Graphics.getFontHeight(font);
+        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
+        dc.fillRectangle(0, _height - h, _width, h);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(_width / 2, _height - h, font, line, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     private function _drawLinkStatus(dc as Graphics.Dc, fg as Number, dim as Number,

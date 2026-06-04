@@ -25,6 +25,16 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     private var _settingsWriteInFlight as Boolean = false;
     private var _cccdWriteInFlight as Boolean = false;
 
+    // -- Diagnostics (surfaced by the on-screen debug HUD) ------------------
+    // These let us tell, without System.println on the head unit, whether the
+    // CCCD subscription was issued/accepted and whether telemetry notifications
+    // are actually arriving and parsing. See the on-screen HUD in AerosenseField.
+    private var _dbgCccdFound as Boolean = false;
+    private var _dbgLastDescWriteStatus as Number? = null;
+    private var _dbgNotifyCount as Number = 0;
+    private var _dbgLastParseOk as Boolean = false;
+    private var _dbgLastValueLen as Number = 0;
+
     public function initialize(profileManager as ProfileManager, model as TelemetryModel) {
         BleDelegate.initialize();
         _profileManager = profileManager;
@@ -185,6 +195,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             return;
         }
         var cccd = _telemetryChar.getDescriptor(BluetoothLowEnergy.cccdUuid());
+        _dbgCccdFound = (cccd != null);
         if (cccd != null) {
             try {
                 cccd.requestWrite([0x01, 0x00]b);
@@ -194,8 +205,20 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
             } catch (e) {
                 System.println("Aerosense CCCD write failed: " + e.getErrorMessage());
             }
+        } else {
+            // Silent no-op here would leave the field in "Searching..." forever:
+            // no descriptor means no subscription means no notifications.
+            System.println("Aerosense telemetry CCCD descriptor not found");
         }
     }
+
+    // -- Diagnostics getters (read by the on-screen debug HUD) -------------
+
+    public function dbgCccdFound() as Boolean { return _dbgCccdFound; }
+    public function dbgLastDescWriteStatus() as Number? { return _dbgLastDescWriteStatus; }
+    public function dbgNotifyCount() as Number { return _dbgNotifyCount; }
+    public function dbgLastParseOk() as Boolean { return _dbgLastParseOk; }
+    public function dbgLastValueLen() as Number { return _dbgLastValueLen; }
 
     private function _resetConnection() as Void {
         _device = null;
@@ -232,7 +255,14 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     public function onCharacteristicChanged(char as BluetoothLowEnergy.Characteristic,
                                             value as ByteArray) as Void {
         if (char.getUuid().equals(_profileManager.TELEMETRY_CHARACTERISTIC)) {
-            if (_model.parse(value)) {
+            // Count every arrival before parsing so the HUD can distinguish
+            // "no notifications" (count stays 0) from "notifications arrive but
+            // parse rejects them" (count climbs, lastParseOk false).
+            _dbgNotifyCount += 1;
+            _dbgLastValueLen = (value == null) ? 0 : value.size();
+            var ok = _model.parse(value);
+            _dbgLastParseOk = ok;
+            if (ok) {
                 WatchUi.requestUpdate();
             }
         }
@@ -251,6 +281,7 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     public function onDescriptorWrite(descriptor as BluetoothLowEnergy.Descriptor,
                                       status as BluetoothLowEnergy.Status) as Void {
         if (BluetoothLowEnergy.cccdUuid().equals(descriptor.getUuid())) {
+            _dbgLastDescWriteStatus = status;
             // Clear the gate regardless of status so a failed CCCD write can't
             // wedge the settings queue forever; settings sync is independent.
             _cccdWriteInFlight = false;
