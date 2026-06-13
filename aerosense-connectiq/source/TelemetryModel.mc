@@ -177,6 +177,48 @@ class TelemetryModel {
         return (flags & Constants.FLAG_YAW_VALID) != 0;
     }
 
+    //! Compact device-mode code for the header strip. Matches enum aero_mode in
+    //! src/app/state.h.
+    public function modeCode() as String {
+        switch (mode) {
+            case 0: return "IDLE";
+            case 1: return "RIDE";
+            case 2: return "PAIR";
+            case 3: return "CMAN";
+            case 4: return "CAUT";
+            case 5: return "EXPT";
+            case 6: return "PCAL";
+            case 7: return "SLP";
+        }
+        return "—";
+    }
+
+    //! Compact CdA-status code (the validity gate that is suppressing CdA).
+    //! Matches enum aero_cda_status in src/app/state.h.
+    public function cdaStatusCode() as String {
+        switch (cdaStatus) {
+            case 0: return "OK";
+            case 1: return "NOSPD";
+            case 2: return "STPWR";
+            case 3: return "LOSPD";
+            case 4: return "LOPWR";
+            case 5: return "ACCEL";
+            case 6: return "BADPR";
+            case 7: return "NORHO";
+            case 8: return "NORID";
+        }
+        return "?";
+    }
+
+    //! Compact speed-source code. Matches enum aero_speed_source in state.h.
+    public function speedSourceCode() as String {
+        switch (speedSource) {
+            case 1: return "P";   // BLE peripheral write (head unit)
+            case 2: return "S";   // ANT+ / BLE central wheel sensor
+        }
+        return "0";               // none
+    }
+
     public function motionLabel() as String {
         // Matches enum aero_motion_state in src/app/state.h.
         switch (motion) {

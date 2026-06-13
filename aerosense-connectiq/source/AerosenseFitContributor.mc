@@ -25,15 +25,19 @@ class AerosenseFitContributor {
     private const SCALE_GRADE    = 100;    // % × 100
     private const SCALE_HUMIDITY = 10;     // % × 10
 
-    private var _cdaRecord as FitContributor.Field;
-    private var _windRecord as FitContributor.Field;
-    private var _yawRecord as FitContributor.Field;
-    private var _gradeRecord as FitContributor.Field;
-    private var _humidityRecord as FitContributor.Field;
-    private var _motionRecord as FitContributor.Field;
-    private var _surfaceRecord as FitContributor.Field;
-    private var _cdaLap as FitContributor.Field;
-    private var _cdaSession as FitContributor.Field;
+    // Nullable: a single createField() that throws must not take the whole
+    // contributor down with it (the cause of the empty FIT in testing — the
+    // constructor threw, AerosenseField caught it, and _fit became null so
+    // *nothing* was recorded). Each field is created independently below.
+    private var _cdaRecord as FitContributor.Field?;
+    private var _windRecord as FitContributor.Field?;
+    private var _yawRecord as FitContributor.Field?;
+    private var _gradeRecord as FitContributor.Field?;
+    private var _humidityRecord as FitContributor.Field?;
+    private var _motionRecord as FitContributor.Field?;
+    private var _surfaceRecord as FitContributor.Field?;
+    private var _cdaLap as FitContributor.Field?;
+    private var _cdaSession as FitContributor.Field?;
 
     private var _cdaLapSum as Float = 0.0;
     private var _cdaSessionSum as Float = 0.0;
@@ -42,24 +46,36 @@ class AerosenseFitContributor {
     private var _timerRunning as Boolean = false;
 
     public function initialize(field as WatchUi.DataField) {
-        _cdaRecord = field.createField("cda",      FIELD_CDA_RECORD,      FitContributor.DATA_TYPE_UINT16,
+        _cdaRecord = _tryCreate(field, "cda",      FIELD_CDA_RECORD,      FitContributor.DATA_TYPE_UINT16,
             { :mesgType => FitContributor.MESG_TYPE_RECORD, :units => "m^2" });
-        _windRecord = field.createField("wind",    FIELD_WIND_RECORD,     FitContributor.DATA_TYPE_UINT16,
+        _windRecord = _tryCreate(field, "wind",    FIELD_WIND_RECORD,     FitContributor.DATA_TYPE_UINT16,
             { :mesgType => FitContributor.MESG_TYPE_RECORD, :units => "m/s" });
-        _yawRecord = field.createField("yaw",      FIELD_YAW_RECORD,      FitContributor.DATA_TYPE_SINT16,
+        _yawRecord = _tryCreate(field, "yaw",      FIELD_YAW_RECORD,      FitContributor.DATA_TYPE_SINT16,
             { :mesgType => FitContributor.MESG_TYPE_RECORD, :units => "deg" });
-        _gradeRecord = field.createField("grade",  FIELD_GRADE_RECORD,    FitContributor.DATA_TYPE_SINT16,
+        _gradeRecord = _tryCreate(field, "grade",  FIELD_GRADE_RECORD,    FitContributor.DATA_TYPE_SINT16,
             { :mesgType => FitContributor.MESG_TYPE_RECORD, :units => "%" });
-        _humidityRecord = field.createField("hum", FIELD_HUMIDITY_RECORD, FitContributor.DATA_TYPE_UINT16,
+        _humidityRecord = _tryCreate(field, "hum", FIELD_HUMIDITY_RECORD, FitContributor.DATA_TYPE_UINT16,
             { :mesgType => FitContributor.MESG_TYPE_RECORD, :units => "%" });
-        _motionRecord = field.createField("motion",  FIELD_MOTION_RECORD,  FitContributor.DATA_TYPE_UINT8,
+        _motionRecord = _tryCreate(field, "motion",  FIELD_MOTION_RECORD,  FitContributor.DATA_TYPE_UINT8,
             { :mesgType => FitContributor.MESG_TYPE_RECORD });
-        _surfaceRecord = field.createField("surf",   FIELD_SURFACE_RECORD, FitContributor.DATA_TYPE_UINT8,
+        _surfaceRecord = _tryCreate(field, "surf",   FIELD_SURFACE_RECORD, FitContributor.DATA_TYPE_UINT8,
             { :mesgType => FitContributor.MESG_TYPE_RECORD });
-        _cdaLap = field.createField("cdaLap",         FIELD_CDA_LAP_AVG,     FitContributor.DATA_TYPE_UINT16,
+        _cdaLap = _tryCreate(field, "cdaLap",         FIELD_CDA_LAP_AVG,     FitContributor.DATA_TYPE_UINT16,
             { :mesgType => FitContributor.MESG_TYPE_LAP, :units => "m^2" });
-        _cdaSession = field.createField("cdaSession", FIELD_CDA_SESSION_AVG, FitContributor.DATA_TYPE_UINT16,
+        _cdaSession = _tryCreate(field, "cdaSession", FIELD_CDA_SESSION_AVG, FitContributor.DATA_TYPE_UINT16,
             { :mesgType => FitContributor.MESG_TYPE_SESSION, :units => "m^2" });
+    }
+
+    //! Create one developer field, isolating any failure so the remaining fields
+    //! are still registered (and still appear in the FIT). Returns null on throw.
+    private function _tryCreate(field as WatchUi.DataField, name as String, id as Number,
+                               type as FitContributor.DataType, opts as Dictionary) as FitContributor.Field? {
+        try {
+            return field.createField(name, id, type, opts);
+        } catch (e) {
+            System.println("Aerosense FIT field '" + name + "' failed: " + e.getErrorMessage());
+            return null;
+        }
     }
 
     public function compute(model as TelemetryModel) as Void {
@@ -67,21 +83,27 @@ class AerosenseFitContributor {
             return;
         }
 
-        _cdaRecord.setData(toFixed(model.cda, SCALE_CDA));
-        _windRecord.setData(toFixed(model.airspeedMps, SCALE_WIND));
-        _yawRecord.setData(toSignedFixed(model.yawDeg, SCALE_YAW));
-        _gradeRecord.setData(toSignedFixed(model.gradePct, SCALE_GRADE));
-        _humidityRecord.setData(toFixed(model.humidityPct, SCALE_HUMIDITY));
-        _motionRecord.setData(model.motion);
-        _surfaceRecord.setData(model.surface);
+        _setField(_cdaRecord, toFixed(model.cda, SCALE_CDA));
+        _setField(_windRecord, toFixed(model.airspeedMps, SCALE_WIND));
+        _setField(_yawRecord, toSignedFixed(model.yawDeg, SCALE_YAW));
+        _setField(_gradeRecord, toSignedFixed(model.gradePct, SCALE_GRADE));
+        _setField(_humidityRecord, toFixed(model.humidityPct, SCALE_HUMIDITY));
+        _setField(_motionRecord, model.motion);
+        _setField(_surfaceRecord, model.surface);
 
         if (_timerRunning && model.cda > 0.0) {
             _cdaLapSum += model.cda;
             _cdaSessionSum += model.cda;
             _lapCount++;
             _sessionCount++;
-            _cdaLap.setData(toFixed(_cdaLapSum / _lapCount, SCALE_CDA));
-            _cdaSession.setData(toFixed(_cdaSessionSum / _sessionCount, SCALE_CDA));
+            _setField(_cdaLap, toFixed(_cdaLapSum / _lapCount, SCALE_CDA));
+            _setField(_cdaSession, toFixed(_cdaSessionSum / _sessionCount, SCALE_CDA));
+        }
+    }
+
+    private function _setField(f as FitContributor.Field?, value as Number) as Void {
+        if (f != null) {
+            f.setData(value);
         }
     }
 

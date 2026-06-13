@@ -24,6 +24,11 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     private var _settingsQueue as Array<ByteArray> = [];
     private var _settingsWriteInFlight as Boolean = false;
     private var _cccdWriteInFlight as Boolean = false;
+    private var _speedWriteInFlight as Boolean = false;
+    // Wall-clock stamp of the in-flight speed write so a lost response can't
+    // wedge the gate forever; see writeSpeedMps / _speedWriteStale.
+    private var _speedWriteStartedMs as Number = 0;
+    private const SPEED_WRITE_TIMEOUT_MS = 3000;
 
     // -- Diagnostics (surfaced by the on-screen debug HUD) ------------------
     // These let us tell, without System.println on the head unit, whether the
@@ -229,6 +234,8 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         _pendingPairResult = null;
         _settingsWriteInFlight = false;
         _cccdWriteInFlight = false;
+        _speedWriteInFlight = false;
+        _speedWriteStartedMs = 0;
         _settingsQueue = [];
     }
 
@@ -270,7 +277,14 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
 
     public function onCharacteristicWrite(char as BluetoothLowEnergy.Characteristic,
                                           status as BluetoothLowEnergy.Status) as Void {
-        if (!char.getUuid().equals(_profileManager.SETTINGS_CHARACTERISTIC) || !_settingsWriteInFlight) {
+        var uuid = char.getUuid();
+        if (uuid.equals(_profileManager.SPEED_CHARACTERISTIC)) {
+            // Clear the speed gate so the next tick may issue a fresh write.
+            _speedWriteInFlight = false;
+            _speedWriteStartedMs = 0;
+            return;
+        }
+        if (!uuid.equals(_profileManager.SETTINGS_CHARACTERISTIC) || !_settingsWriteInFlight) {
             return;
         }
 
@@ -290,8 +304,15 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     }
 
     //! Write speed_mps as little-endian uint16 cm/s to characteristic 53f3c0b4.
+    //! Connect IQ permits only one outstanding GATT operation; issuing a write
+    //! while another is in flight throws. We therefore drop the sample (speed is
+    //! rate-based, freshest wins) rather than queue it, and guard the call so a
+    //! throw can't leave the field hung (the crash seen in CIQ_LOG.txt).
     public function writeSpeedMps(speedMps as Float) as Boolean {
         if (_speedChar == null) {
+            return false;
+        }
+        if (_cccdWriteInFlight || _settingsWriteInFlight || _speedWriteBusy()) {
             return false;
         }
         var cms = (speedMps * 100.0 + 0.5).toNumber();
@@ -300,8 +321,35 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
         var bytes = new[2]b;
         bytes.encodeNumber(cms, Lang.NUMBER_FORMAT_UINT16,
             {:offset => 0, :endianness => Lang.ENDIAN_LITTLE});
-        _speedChar.requestWrite(bytes,
-            {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
+        try {
+            _speedChar.requestWrite(bytes,
+                {:writeType => BluetoothLowEnergy.WRITE_TYPE_WITH_RESPONSE});
+        } catch (e) {
+            // A missed speed write is non-fatal: the device falls back to its
+            // own speed source and we retry on the next tick. Never let it crash.
+            System.println("Aerosense speed write failed: " + e.getErrorMessage());
+            _speedWriteInFlight = false;
+            _speedWriteStartedMs = 0;
+            return false;
+        }
+        _speedWriteInFlight = true;
+        _speedWriteStartedMs = System.getTimer();
+        return true;
+    }
+
+    //! True while a speed write is outstanding. Self-clears after a timeout so a
+    //! dropped onCharacteristicWrite can't wedge speed forever (getTimer wraps;
+    //! treat negative deltas as still-in-flight, the next tick re-checks).
+    private function _speedWriteBusy() as Boolean {
+        if (!_speedWriteInFlight) {
+            return false;
+        }
+        var dt = System.getTimer() - _speedWriteStartedMs;
+        if (dt >= SPEED_WRITE_TIMEOUT_MS) {
+            _speedWriteInFlight = false;
+            _speedWriteStartedMs = 0;
+            return false;
+        }
         return true;
     }
 
@@ -339,9 +387,10 @@ class AerosenseBleDelegate extends BluetoothLowEnergy.BleDelegate {
     }
 
     private function _flushPendingSettings() as Void {
-        // Wait until the CCCD write completes: only one GATT op may be in flight.
+        // Only one GATT op may be in flight: wait out the CCCD write and any
+        // outstanding speed write before issuing a queued settings write.
         if (_settingsChar == null || _settingsWriteInFlight || _cccdWriteInFlight ||
-                _settingsQueue.size() == 0) {
+                _speedWriteBusy() || _settingsQueue.size() == 0) {
             return;
         }
         var tlv = _settingsQueue[0] as ByteArray;

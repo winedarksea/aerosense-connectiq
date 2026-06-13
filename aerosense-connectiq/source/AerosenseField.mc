@@ -69,7 +69,14 @@ class AerosenseField extends WatchUi.DataField {
         _power     = (info has :currentPower)     ? info.currentPower     : null;
         _heartRate = (info has :currentHeartRate) ? info.currentHeartRate : null;
         _distanceM = (info has :elapsedDistance)  ? info.elapsedDistance  : null;
-        _lapTimeMs = (info has :timerTimeInLap)   ? info.timerTimeInLap   : null;
+        // Prefer per-lap timer time; some head units leave timerTimeInLap null
+        // (e.g. before the first lap), so fall back to the session timer so the
+        // cell isn't permanently blank — for lap 1 the two are equal anyway.
+        var lapMs = (info has :timerTimeInLap) ? info.timerTimeInLap : null;
+        if (lapMs == null && (info has :timerTime)) {
+            lapMs = info.timerTime;
+        }
+        _lapTimeMs = lapMs;
     }
 
     private function _maybeForwardPressureCalRequest() as Void {
@@ -162,7 +169,9 @@ class AerosenseField extends WatchUi.DataField {
             " dw:" + ((dw == null) ? "-" : dw.toString()) +
             " nf:" + d.dbgNotifyCount().toString() +
             " ok:" + (d.dbgLastParseOk() ? "1" : "0") +
-            " ln:" + d.dbgLastValueLen().toString();
+            " ln:" + d.dbgLastValueLen().toString() +
+            " src:" + _model.speedSourceCode() +
+            " cda:" + _model.cdaStatusCode();
         var font = Graphics.FONT_XTINY;
         var h = Graphics.getFontHeight(font);
         dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
@@ -212,20 +221,27 @@ class AerosenseField extends WatchUi.DataField {
         var rightEdge = _width - EDGE_PAD - battReserveW;
 
         if (connected && fresh) {
-            // Wordmark + motion/surface chips. Drop wordmark when space is tight.
+            // Device-mode label + motion/surface chips. The wordmark is the first
+            // thing dropped when space is tight; the mode (RIDE/SLP/…) is more
+            // useful on the bike, so it always stays.
+            var modeStr = _model.modeCode();
             var mCode = _model.motionCode();
             var sCode = _model.surfaceCode();
             var chipPad = 3;
+            var modeW = dc.getTextWidthInPixels(modeStr, font) + 6;
             var mChipW = dc.getTextWidthInPixels(mCode, font) + 2 * chipPad;
             var sChipW = dc.getTextWidthInPixels(sCode, font) + 2 * chipPad;
             var available = rightEdge - contentX;
             var wordmarkW = dc.getTextWidthInPixels("AEROSENSE", font);
             var cx = contentX;
-            if (wordmarkW + 6 + mChipW + 4 + sChipW <= available) {
+            if (wordmarkW + 6 + modeW + mChipW + 4 + sChipW <= available) {
                 dc.setColor(dim, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(cx, 2, font, "AEROSENSE", Graphics.TEXT_JUSTIFY_LEFT);
                 cx += wordmarkW + 6;
             }
+            dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, 2, font, modeStr, Graphics.TEXT_JUSTIFY_LEFT);
+            cx += modeW;
             var chipY = (headerH - fontH) / 2;
             _drawChip(dc, cx, chipY, mChipW, fontH, _model.motionColor(), mCode, font);
             cx += mChipW + 4;
