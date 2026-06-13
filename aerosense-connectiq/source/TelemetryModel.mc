@@ -18,7 +18,15 @@ import Toybox.System;
 //    12     2  airspeed_cms      u16, cm/s
 //    14     2  battery_mv        u16, mV
 //
-// v2a (current firmware, 24 bytes, no version prefix):
+// v2 compact notify (current firmware, 20 bytes, no version prefix):
+//   off  size  field
+//     0    16  v1 layout above
+//    16     2  grade_centi_pct
+//    18     1  humidity_pct
+//    19     1  state              bits 0..2=motion, bits 3..4=surface,
+//                                 bits 5..6=speed_source
+//
+// v2a full GATT read (24 bytes, no version prefix):
 //   off  size  field
 //     0     1  mode
 //     1     1  battery_pct
@@ -49,6 +57,7 @@ import Toybox.System;
 //    23     2  reserved
 class TelemetryModel {
     private const V1_LEN = 16;
+    private const V2_COMPACT_NOTIFY_LEN = 20;
     private const V2_UNPREFIXED_LEN = 24;
     private const V2_PREFIXED_LEN = 25;
 
@@ -80,6 +89,7 @@ class TelemetryModel {
         var len = data.size();
         var base = 0;
         var hasExtended = false;
+        var compactNotify = false;
 
         if (len >= V2_PREFIXED_LEN && data[0] == 0x02) {
             version = 2;
@@ -89,6 +99,11 @@ class TelemetryModel {
             version = 2;
             base = 0;
             hasExtended = true;
+        } else if (len >= V2_COMPACT_NOTIFY_LEN) {
+            version = 2;
+            base = 0;
+            hasExtended = true;
+            compactNotify = true;
         } else if (len >= V1_LEN) {
             version = 1;
             base = 0;
@@ -114,11 +129,21 @@ class TelemetryModel {
         batteryV = battMv / 1000.0;
 
         if (hasExtended) {
-            humidityPct = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 16});
-            motion      = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 17});
-            surface     = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 18});
-            speedSource = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 19});
-            var gradeCenti = data.decodeNumber(Lang.NUMBER_FORMAT_SINT16, {:offset => base + 20, :endianness => Lang.ENDIAN_LITTLE});
+            var gradeOffset = base + 20;
+            if (compactNotify) {
+                gradeOffset = base + 16;
+                humidityPct = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 18});
+                var state = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 19});
+                motion = state & 0x07;
+                surface = (state >> 3) & 0x03;
+                speedSource = (state >> 5) & 0x03;
+            } else {
+                humidityPct = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 16});
+                motion      = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 17});
+                surface     = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 18});
+                speedSource = data.decodeNumber(Lang.NUMBER_FORMAT_UINT8, {:offset => base + 19});
+            }
+            var gradeCenti = data.decodeNumber(Lang.NUMBER_FORMAT_SINT16, {:offset => gradeOffset, :endianness => Lang.ENDIAN_LITTLE});
             gradePct = gradeCenti / 100.0;
         } else {
             humidityPct = 0;
